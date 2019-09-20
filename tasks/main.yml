@@ -1,0 +1,10 @@
+---
+# perform setup as a non-root user
+- setup:
+  become: no
+
+# use import to become root globally
+- name: become root
+  import_tasks: root.yml
+  become: yes
+...
