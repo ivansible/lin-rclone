@@ -1,2 +1,10 @@
 ---
 # handlers file for ivansible.lin_rclone
+
+- name: restart remote systemd mounts
+  systemd:
+    name: remote-fs.target
+    state: restarted
+    daemon_reload: yes
+  become: yes
+...

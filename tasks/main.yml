@@ -1,10 +1,56 @@
 ---
-# perform setup as a non-root user
-- setup:
+- name: refresh host facts as non-root
+  setup:
   become: no
+  tags:
+  - lin_rclone_all
 
-# use import to become root globally
-- name: become root
-  import_tasks: root.yml
+- name: install rclone
+  import_tasks: install.yml
   become: yes
+  tags:
+  - lin_rclone_all
+  - lin_rclone_install
+
+- name: create rclone mount wrapper
+  import_tasks: wrapper.yml
+  become: yes
+  tags:
+  - lin_rclone_all
+  - lin_rclone_wrapper
+
+- name: add blockinfile workaround in rclone config and fix access rights
+  # without this empty section rclone will strip last blockinfile comment
+  lineinfile:
+    path: "{{ lin_rclone_config |expanduser }}"
+    line: "[end_of_ansible_blocks]"
+    create: yes
+    owner: "{{ lin_rclone_config_nonroot |bool |ternary(ansible_user_uid, 'root') }}"
+    mode: 0600
+  become: yes
+  tags:
+  - lin_rclone_all
+  - lin_rclone_config
+
+- name: setup rclone mounts
+  include_tasks: _mount.yml
+  args:
+    apply:
+      become: yes
+      tags:
+      - lin_rclone_config
+      - lin_rclone_mounts
+  vars:
+    fstab_default: true
+  loop: "{{ lin_rclone_mounts }}"
+  when: item.enabled |default(true)
+  tags:
+  - lin_rclone_all
+  - lin_rclone_config
+  - lin_rclone_mounts
+
+- name: reload systemd mounts now
+  meta: flush_handlers
+  tags:
+  - lin_rclone_all
 ...

@@ -1,5 +1,6 @@
 ---
-dependencies: []
+dependencies:
+  - ivansible.lin_base
 
 galaxy_info:
   role_name: lin_rclone
@@ -17,7 +18,10 @@ galaxy_info:
 
   galaxy_tags:
     - linux
-    - ansible
+    - rclone
+    - mount
+    - remotes
+    - restic
 
   github_branch: master
 ...

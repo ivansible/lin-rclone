@@ -1,0 +1,90 @@
+---
+- name: extract item options for {{item.name}}
+  set_fact:
+    _name: "{{ item.name }}"
+    _path: "{{ item.path }}"
+    _config: "{{ item.config }}"
+    _fstab: "{{ item.fstab |default(fstab_default) |bool }}"
+    _automount: "{{ item.path is defined and item.automount |default(false) |bool }}"
+    _nonroot: "{{ item.nonroot |default(false) |bool }}"
+    _logto: "{{ item.logto |default('') }}"
+    # explicitly convert token to string to avoid json being treated as a dict
+    _token: "{{ item.token |default('') |string }}"
+    _reuse_token: "{{ item.reuse_token |default('') |string |lower not in ['false','no','0',''] }}"
+    _reuse_from: "{{ (item.reuse_token |default('') |string |lower in ['true','yes','1',''])
+                     |ternary(item.name, item.reuse_token |default('') |string) }}"
+
+- name: obtain previous token for {{_name}}
+  shell:
+    cmd: |
+      from __future__ import print_function
+      try:
+        import configparser
+      except ImportError:
+        import ConfigParser as configparser
+      config = configparser.ConfigParser()
+      config.read('{{ lin_rclone_config |expanduser }}')
+      try:
+        print(config.get('{{ _reuse_from }}', 'token'))
+      except configparser.NoSectionError:
+        pass
+      except configparser.NoOptionError:
+        pass
+    executable: "{{ ansible_python.executable }}"
+  register: old_token_result
+  when: _reuse_token
+  changed_when: false
+
+- name: setup config section for {{_name}}
+  blockinfile:
+    path: "{{ lin_rclone_config |expanduser }}"
+    marker: "# == {mark} {{ _name }} =="
+    # rclone will add empty lines at the sections ends, so do we
+    block: |+
+      [{{ _name }}]
+      {{ _config |regex_replace('\[TOKEN\]', new_token) }}
+
+    create: yes
+    # ansible will strip end marker comment if it's the last one in config
+    # as a workaround, insert an empty section at the end of file
+    insertbefore: "\\[end_of_ansible_blocks\\]"
+  vars:
+    # explicitly convert token to string to avoid json being treated as a dict
+    new_token: "{{ old_token_result.stdout |default('') or _token |string }}"
+  notify: restart remote systemd mounts
+
+- name: create mountpoint for {{_name}}
+  file:
+    path: "{{ _path }}"
+    state: directory
+  when: _path != ''
+
+- name: setup mount for {{_name}}
+  mount:
+    path: "{{ _path }}"
+    src: "{{ _name }}:"
+    fstype: rclone
+    state: "{{ _fstab |ternary('present', 'absent') }}"
+    opts: "{{ options |select |join(',') }}"
+  vars:
+    options:
+    # basic options
+    - rw
+    - _netdev
+    - noauto
+    - nofail
+    # rclone options
+    - vfs-cache-mode={{ lin_rclone_vfs_cache_mode }}
+    - dir-cache-time={{ lin_rclone_dir_cache_time }}
+    # fuse options
+    - "{{ _nonroot |ternary('allow_other', '') }}"
+    - "{{ _nonroot |ternary('uid=%d' % ansible_user_uid, '') }}"
+    # systemd / automount options
+    - "{{ _automount |ternary('x-systemd.automount', '') }}"
+    - "{{ _automount |ternary('x-systemd.idle-timeout=%d' % lin_rclone_idle_timeout, '') }}"
+    # troubleshooting options
+    - "{{ _logto |ternary('log-file=%s' % _logto|expanduser, '') }}"
+    - "{{ _logto |ternary('verbose=2', '') }}"
+    - "{{ _logto |ternary('x-systemd.mount-timeout=%d' % lin_rclone_mount_timeout, '') }}"
+  notify: restart remote systemd mounts
+...

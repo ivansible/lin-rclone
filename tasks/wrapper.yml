@@ -1,0 +1,14 @@
+---
+- name: create rclone fuse wrapper
+  template:
+    src: rclonefs.sh
+    dest: /usr/sbin/rclonefs
+    mode: 0755
+  notify: restart remote systemd mounts
+
+- name: create symbolic link for mount
+  file:
+    state: link
+    src: /usr/sbin/rclonefs
+    dest: /sbin/mount.rclone
+...

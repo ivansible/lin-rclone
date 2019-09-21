@@ -1,4 +1,31 @@
 ---
 # defaults file for ivansible.lin_rclone
+is_permitted: no
 
+lin_rclone_version: latest
+lin_rclone_allow_reinstall: no
+lin_rclone_repo_owner: rclone
+lin_rclone_binary: /usr/bin/rclone
+lin_rclone_config: /etc/rclone/rclone.conf
+
+lin_rclone_config_nonroot: no
+lin_rclone_idle_timeout: 900
+lin_rclone_mount_timeout: 10
+lin_rclone_vfs_cache_mode: writes
+lin_rclone_dir_cache_time: 30s
+
+lin_rclone_mounts: []
+#  - name: box           # required
+#    path: /mnt/box      # required
+#    config: |           # required
+#      type = box
+#      token = [TOKEN]
+#      ...
+#    reuse_token: no     # optional
+#    token: '{json...}'  # required unless reuse_token
+#    enabled: yes        # optional
+#    fstab: yes          # optional
+#    automount: no       # optional
+#    nonroot: no         # optional
+#    log: /path/to/log   $ optional
 ...
