@@ -17,8 +17,8 @@ lin_rclone_vfs_cache_mode: writes
 lin_rclone_dir_cache_time: 30s
 
 lin_rclone_mounts: []
-#  - name: box           # required
-#    path: /mnt/box      # required
+#  - name: remote        # required
+#    path: /mnt/remote   # required
 #    config: |           # required
 #      type = box
 #      token = [TOKEN]
