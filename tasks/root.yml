@@ -1,0 +1,60 @@
+---
+- name: install rclone
+  import_tasks: install.yml
+  tags: lin_rclone_install
+
+- name: create rclone fuse wrapper
+  template:
+    src: rclonefs.sh
+    dest: /usr/sbin/rclonefs
+    mode: 0755
+  notify: restart remote systemd mounts
+  tags: lin_rclone_wrapper
+
+- name: create symbolic link for mount
+  file:
+    state: link
+    src: /usr/sbin/rclonefs
+    dest: /sbin/mount.rclone
+  tags: lin_rclone_wrapper
+
+- name: create group for access to rclone config and mounts
+  group:
+    name: rclone
+    gid: "{{ lin_rclone_group_gid }}"
+
+- name: give remote user access to rclone config and mounts
+  user:
+    name: "{{ ansible_user_id }}"
+    groups: rclone
+    append: yes
+  when: lin_rclone_allow_nonroot |bool
+  tags: lin_rclone_config
+
+- name: add blockinfile workaround in rclone config and fix access rights
+  # without this empty section rclone will strip last blockinfile comment
+  lineinfile:
+    path: "{{ lin_rclone_config |expanduser }}"
+    line: "[end_of_ansible_blocks]"
+    create: yes
+    owner: root
+    group: rclone
+    mode: 0640
+  tags: lin_rclone_config
+
+- name: setup rclone mounts
+  include_tasks: _mount.yml
+  args:
+    apply:
+      become: yes
+      tags:
+      - lin_rclone_config
+      - lin_rclone_mounts
+  vars:
+    fstab_default: true
+  loop: "{{ lin_rclone_mounts }}"
+  when: item.enabled |default(true)
+  tags:
+  - lin_rclone_config
+  - lin_rclone_mounts
+...

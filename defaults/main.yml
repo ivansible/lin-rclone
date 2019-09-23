@@ -8,7 +8,9 @@ lin_rclone_repo_owner: rclone
 lin_rclone_binary: /usr/bin/rclone
 lin_rclone_config: /etc/rclone/rclone.conf
 
-lin_rclone_config_nonroot: no
+lin_rclone_allow_nonroot: no
+lin_rclone_group_gid: 911
+
 lin_rclone_idle_timeout: 900
 lin_rclone_mount_timeout: 10
 lin_rclone_vfs_cache_mode: writes
