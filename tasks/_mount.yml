@@ -39,13 +39,13 @@
   blockinfile:
     path: "{{ lin_rclone_config |expanduser }}"
     marker: "# == {mark} {{ _name }} =="
-    # rclone will add empty lines at the sections ends, so do we
+    # rclone token refresher will add empty lines at the sections ends, so do we
     block: |+
       [{{ _name }}]
       {{ _config |regex_replace('\[TOKEN\]', new_token) }}
 
     create: yes
-    # ansible will strip end marker comment if it's the last one in config
+    # rclone token refresher will strip the last end marker comment causing blockinfile mess
     # as a workaround, insert an empty section at the end of file
     insertbefore: "\\[end_of_ansible_blocks\\]"
   vars:

@@ -32,7 +32,7 @@
   tags: lin_rclone_config
 
 - name: add blockinfile workaround in rclone config and fix access rights
-  # without this empty section rclone will strip last blockinfile comment
+  # without this empty section rclone token refresher will strip last blockinfile comment
   lineinfile:
     path: "{{ lin_rclone_config |expanduser }}"
     line: "[end_of_ansible_blocks]"
