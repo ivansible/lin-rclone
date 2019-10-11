@@ -31,4 +31,9 @@
     rclone_deb_result.msg.find('later version is already installed') == -1
   when: latest_rclone_release.stdout |default('') |regex_search('^skipped, since .* exists$') == ''
   notify: restart remote systemd mounts
+
+- name: generate rclone bash completion
+  command: "{{ lin_rclone_binary }} genautocomplete bash"
+  args:
+    creates: /etc/bash_completion.d/rclone
 ...
