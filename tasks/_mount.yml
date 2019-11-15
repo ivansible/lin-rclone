@@ -1,5 +1,5 @@
 ---
-- name: extract item options for {{item.name}}
+- name: extract item options for {{ item.name }}
   set_fact:
     _name: "{{ item.name }}"
     _path: "{{ item.path }}"
@@ -14,7 +14,7 @@
     _reuse_from: "{{ (item.reuse_token |default('') |string |lower in ['true','yes','1',''])
                      |ternary(item.name, item.reuse_token |default('') |string) }}"
 
-- name: obtain previous token for {{_name}}
+- name: obtain previous token for {{ _name }}
   shell:
     cmd: |
       from __future__ import print_function
@@ -35,7 +35,7 @@
   when: _reuse_token
   changed_when: false
 
-- name: setup config section for {{_name}}
+- name: setup config section for {{ _name }}
   blockinfile:
     path: "{{ lin_rclone_config |expanduser }}"
     marker: "# == {mark} {{ _name }} =="
@@ -53,13 +53,13 @@
     new_token: "{{ old_token_result.stdout |default('') or _token |string }}"
   notify: restart remote systemd mounts
 
-- name: create mountpoint for {{_name}}
+- name: create mountpoint for {{ _name }}
   file:
     path: "{{ _path }}"
     state: directory
   when: _path != ''
 
-- name: setup mount for {{_name}}
+- name: setup mount for {{ _name }}
   mount:
     path: "{{ _path }}"
     src: "{{ _name }}:"
@@ -68,23 +68,23 @@
     opts: "{{ options |select |join(',') }}"
   vars:
     options:
-    # basic options
-    - rw
-    - _netdev
-    - noauto
-    - nofail
-    # rclone options
-    - vfs-cache-mode={{ lin_rclone_vfs_cache_mode }}
-    - dir-cache-time={{ lin_rclone_dir_cache_time }}
-    # fuse options
-    - "{{ _nonroot |ternary('gid=%d' % lin_rclone_group_gid, '') }}"
-    - "{{ _nonroot |ternary('allow_other', '') }}"
-    # systemd / automount options
-    - "{{ _automount |ternary('x-systemd.automount', '') }}"
-    - "{{ _automount |ternary('x-systemd.idle-timeout=%d' % lin_rclone_idle_timeout, '') }}"
-    # troubleshooting options
-    - "{{ _logto |ternary('log-file=%s' % _logto|expanduser, '') }}"
-    - "{{ _logto |ternary('verbose=2', '') }}"
-    - "{{ _logto |ternary('x-systemd.mount-timeout=%d' % lin_rclone_mount_timeout, '') }}"
+      # basic options
+      - rw
+      - _netdev
+      - noauto
+      - nofail
+      # rclone options
+      - vfs-cache-mode={{ lin_rclone_vfs_cache_mode }}
+      - dir-cache-time={{ lin_rclone_dir_cache_time }}
+      # fuse options
+      - "{{ _nonroot |ternary('gid=%d' % lin_rclone_group_gid, '') }}"
+      - "{{ _nonroot |ternary('allow_other', '') }}"
+      # systemd / automount options
+      - "{{ _automount |ternary('x-systemd.automount', '') }}"
+      - "{{ _automount |ternary('x-systemd.idle-timeout=%d' % lin_rclone_idle_timeout, '') }}"
+      # troubleshooting options
+      - "{{ _logto |ternary('log-file=%s' % _logto|expanduser, '') }}"
+      - "{{ _logto |ternary('verbose=2', '') }}"
+      - "{{ _logto |ternary('x-systemd.mount-timeout=%d' % lin_rclone_mount_timeout, '') }}"
   notify: restart remote systemd mounts
 ...

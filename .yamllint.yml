@@ -1,0 +1,9 @@
+---
+extends: default
+rules:
+  line-length:
+    max: 160
+    level: warning
+  truthy: disable   # yes/no is ok here
+  comments: disable # comment without space is ok to deactivate code
+...

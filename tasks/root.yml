@@ -48,13 +48,13 @@
     apply:
       become: yes
       tags:
-      - lin_rclone_config
-      - lin_rclone_mounts
+        - lin_rclone_config
+        - lin_rclone_mounts
   vars:
     fstab_default: true
   loop: "{{ lin_rclone_mounts }}"
   when: item.enabled |default(true)
   tags:
-  - lin_rclone_config
-  - lin_rclone_mounts
+    - lin_rclone_config
+    - lin_rclone_mounts
 ...
