@@ -1,12 +1,7 @@
 ---
-- name: refresh host facts as non-root
-  setup:
-  become: no
-  tags: lin_rclone_all
-
 - name: run rclone tasks as root
   import_tasks: root.yml
-  become: yes
+  become: true
   tags: lin_rclone_all
 
 - name: reload systemd mounts now
