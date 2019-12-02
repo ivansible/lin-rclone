@@ -1,39 +1,26 @@
 ---
 - name: detect latest rclone release
-  uri:
-    url: https://github.com/{{ lin_rclone_repo_owner }}/rclone/releases/latest
-    method: HEAD
-    creates: "{{ lin_rclone_allow_reinstall | ternary(omit, lin_rclone_binary) }}"
-  #connection: local  # never use this with "creates"
+  github_release:
+    repository: rclone
+    release: "{{ lin_rclone_version }}"
+    owner: "{{ lin_rclone_repo_owner }}"
+    template: "{download_url}/rclone-{ver}-linux-amd64.deb"
+    version_script: "{{ lin_rclone_binary }} version"
+    reinstall: "{{ lin_rclone_allow_reinstall |bool }}"
   register: latest_rclone_release
-  when: lin_rclone_version == 'latest'
-
-- name: extract rclone release from github page
-  set_fact:
-    lin_rclone_version:
-      "{{ latest_rclone_release.url | basename | regex_replace('^v') }}"
-  when: latest_rclone_release is not skipped
-        and latest_rclone_release.url is defined
-
-- debug:
-    msg: "latest rclone release from {{ lin_rclone_repo_owner }}: {{ lin_rclone_version }}"
-  run_once: true
-  when: latest_rclone_release is not skipped
-        and latest_rclone_release.url is defined
 
 - name: install rclone package
   apt:
-    deb: https://github.com/{{ lin_rclone_repo_owner }}/rclone/releases/download/v{{ lin_rclone_version }}/rclone-v{{ lin_rclone_version }}-linux-amd64.deb
+    deb: "{{ latest_rclone_release.url }}"
     only_upgrade: "{{ not lin_rclone_allow_reinstall |bool }}"
   register: rclone_deb_result
   failed_when:
     rclone_deb_result.failed and
     rclone_deb_result.msg.find('later version is already installed') == -1
-  when: latest_rclone_release.stdout |default('') |regex_search('^skipped, since .* exists$') == ''
+  when: latest_rclone_release is changed
   notify: restart remote systemd mounts
 
 - name: generate rclone bash completion
   command: "{{ lin_rclone_binary }} genautocomplete bash"
-  args:
-    creates: /etc/bash_completion.d/rclone
+  when: latest_rclone_release is changed
 ...
