@@ -76,6 +76,15 @@
       # rclone options
       - vfs-cache-mode={{ lin_rclone_vfs_cache_mode }}
       - dir-cache-time={{ lin_rclone_dir_cache_time }}
+      - vfs-read-chunk-size-limit=off
+      - buffer-size=256M
+      - drive-chunk-size=32M
+      - fast-list
+      - vfs-read-chunk-size-limit=off
+      - drive-skip-gdocs
+      - dir-cache-time=168h
+      - timeout=1h
+      - use-mmap
       # fuse options
       - "{{ _nonroot |ternary('gid=%d' % lin_rclone_group_gid, '') }}"
       - "{{ _nonroot |ternary('allow_other', '') }}"
