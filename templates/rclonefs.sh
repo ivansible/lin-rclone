@@ -49,14 +49,16 @@ while getopts :o: opts; do
   done
 done
 
-# exec rclone
+# exec rclone (shellcheck note: args must stay unquoted)
 if [ $foreground = yes ]; then
-  exec $rclone mount $args $remote $mountpoint
+  # shellcheck disable=SC2086
+  exec "$rclone" mount $args "$remote" "$mountpoint"
 else
   # NOTE: --daemon hangs under systemd automount, using `&`
-  $rclone mount $args $remote $mountpoint </dev/null >&/dev/null &
+  # shellcheck disable=SC2086
+  "$rclone" mount $args "$remote" "$mountpoint" </dev/null >&/dev/null &
   # WARNING: this check hangs for empty mounts!
-  while [ $wait = yes ] && [ "$(ls -lA $mountpoint)" = "total 0" ]; do
+  while [ $wait = yes ] && [ "$(ls -lA "$mountpoint")" = 'total 0' ]; do
     sleep 0.5
   done
 fi

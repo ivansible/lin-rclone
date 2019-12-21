@@ -16,7 +16,7 @@ None
 Available variables are listed below, along with default values.
 
     lin_rclone_version: latest
-    lin_rclone_allow_reinstall: no
+    lin_rclone_allow_reinstall: false
     lin_rclone_repo_owner: rclone
 Set the rclone download location.
 
@@ -24,7 +24,7 @@ Set the rclone download location.
     lin_rclone_config: /etc/rclone/rclone.conf
 These two are rarely modified.
 
-    lin_rclone_allow_nonroot: no
+    lin_rclone_allow_nonroot: false
     lin_rclone_group_gid: 911
 Ansible will create a unix group `rclone` with given Id. If `allow_nonroot`
 is true, the remote user will be added in the group and consequently will
@@ -47,8 +47,8 @@ The name of remote. Required.
     path: /mnt/remote
 Mount point. Required even if `fstab` is `no` (it's then removed from /etc/fstab).
 
-    enabled: yes
-Optional boolean, defaults to true. If false, ansible will just skip this item.
+    enabled: true
+Optional boolean, defaults to `true`. If false, ansible will just skip this item.
 
     config: |
       type = ...
@@ -62,7 +62,7 @@ Optional string containg authorizatin token for this remote in free format.
 As this usually is a JSON dictionary, please wrap the string in single quotes
 to avoid problems with Ansible YAML parser. 
 
-    reuse_token: no
+    reuse_token: false
 This can be true, false, empty string or name of the section in rclone config.
 When this is false or empty string (the default), only the token configured
 above will be given to remote (if present). If this is true, ansible will
@@ -71,15 +71,15 @@ found, ansible will fall back to the literal token above. The previous
 token is by default looked up in the same section as this remote name, but
 you can provide a custom section name instead of true here.
 
-    fstab: yes
+    fstab: true
 Optional boolean. When true (the default), the mount will be added to
 `/etc/fstab`. When false, the mount entry will be removed if found.
 
-    automount: no
+    automount: false
 Optional boolean, defaults to false. If true, the systemd automounter will
 be enabled for the corresponding fstab entry.
 
-    nonroot: no
+    nonroot: false
 Normally rclone mounts are only accessible to root. If `nonroot` is true,
 the mount will be read-only accessible by the members of group `rclone`.
 
@@ -100,22 +100,22 @@ troubleshooting. By default the log is disabled.
 
 ## Dependencies
 
-This role pulls the `reload systemd daemon` hadnler from role `ivansible.lin_base`.
+This role pulls the `reload systemd daemon` handler from role `ivansible.lin_base`.
 
 
 ## Example Playbook
 
-    - hosts: vagrant-boxes
+    - hosts: mystorage
       roles:
          - role: ivansible.lin_rclone
-           lin_rclone_allow_nonroot: yes
+           lin_rclone_allow_nonroot: true
            lin_rclone_mounts:
            - name: box
              path: /mnt/box
              token: "my_box_token"
-             reuse_token: another_box_section (or just yes)
-             automount: yes
-             nonroot: yes
+             reuse_token: another_box_section  # (or just true)
+             automount: true
+             nonroot: true
              config: |
                type = box
                token = [TOKEN]
@@ -127,4 +127,4 @@ MIT
 
 ## Author Information
 
-Created in 2019 by [IvanSible](https://github.com/ivansible)
+Created in 2019-2020 by [IvanSible](https://github.com/ivansible)

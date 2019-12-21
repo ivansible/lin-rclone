@@ -1,14 +1,14 @@
 ---
-# defaults file for ivansible.lin_rclone
-is_permitted: no
+# defaults for ivansible.lin_rclone
+is_permitted: false
 
 lin_rclone_version: latest
-lin_rclone_allow_reinstall: no
+lin_rclone_allow_reinstall: false
 lin_rclone_repo_owner: rclone
 lin_rclone_binary: /usr/bin/rclone
 lin_rclone_config: /etc/rclone/rclone.conf
 
-lin_rclone_allow_nonroot: no
+lin_rclone_allow_nonroot: false
 lin_rclone_group_gid: 911
 
 lin_rclone_idle_timeout: 900
@@ -23,11 +23,11 @@ lin_rclone_mounts: []
 #      type = box
 #      token = [TOKEN]
 #      ...
-#    reuse_token: no     # optional
+#    reuse_token: false  # optional
 #    token: '{json...}'  # required unless reuse_token
-#    enabled: yes        # optional
-#    fstab: yes          # optional
-#    automount: no       # optional
-#    nonroot: no         # optional
-#    log: /path/to/log   $ optional
+#    enabled: true       # optional
+#    fstab: true         # optional
+#    automount: false    # optional
+#    nonroot: false      # optional
+#    log: /path/to/log   # optional
 ...

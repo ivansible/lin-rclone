@@ -39,12 +39,12 @@
   blockinfile:
     path: "{{ lin_rclone_config |expanduser }}"
     marker: "# == {mark} {{ _name }} =="
-    # rclone token refresher will add empty lines at the sections ends, so do we
+    # rclone token refresher adds empty lines after sections ends and so do we
     block: |+
       [{{ _name }}]
       {{ _config |regex_replace('\[TOKEN\]', new_token) }}
 
-    create: yes
+    create: true
     # rclone token refresher will strip the last end marker comment causing blockinfile mess
     # as a workaround, insert an empty section at the end of file
     insertbefore: "\\[end_of_ansible_blocks\\]"
@@ -57,7 +57,7 @@
   file:
     path: "{{ _path }}"
     state: directory
-  when: _path != ''
+  when: _path != ''  # noqa 602
 
 - name: setup mount for {{ _name }}
   mount:
@@ -86,5 +86,6 @@
       - "{{ _logto |ternary('log-file=%s' % _logto|expanduser, '') }}"
       - "{{ _logto |ternary('verbose=2', '') }}"
       - "{{ _logto |ternary('x-systemd.mount-timeout=%d' % lin_rclone_mount_timeout, '') }}"
+  when: _path != ''  # noqa 602
   notify: restart remote systemd mounts
 ...

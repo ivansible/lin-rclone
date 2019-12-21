@@ -7,6 +7,7 @@
     template: "{download_url}/rclone-{ver}-linux-amd64.deb"
     version_script: "{{ lin_rclone_binary }} version"
     reinstall: "{{ lin_rclone_allow_reinstall |bool }}"
+  tags: skip_ansible_lint
   register: latest_rclone_release
 
 - name: install rclone package

@@ -22,12 +22,13 @@
   group:
     name: rclone
     gid: "{{ lin_rclone_group_gid }}"
+  tags: lin_rclone_install
 
 - name: give remote user access to rclone config and mounts
   user:
     name: "{{ ansible_user_id }}"
     groups: rclone
-    append: yes
+    append: true
   when: lin_rclone_allow_nonroot |bool
   tags: lin_rclone_config
 
@@ -36,7 +37,7 @@
   lineinfile:
     path: "{{ lin_rclone_config |expanduser }}"
     line: "[end_of_ansible_blocks]"
-    create: yes
+    create: true
     owner: root
     group: rclone
     mode: 0640
@@ -46,7 +47,7 @@
   include_tasks: _mount.yml
   args:
     apply:
-      become: yes
+      become: true
       tags:
         - lin_rclone_config
         - lin_rclone_mounts

@@ -1,6 +1,6 @@
 ---
 dependencies:
-  - ivansible.lin_base
+  - ivansible.lin_base  # for defaults and github_release module
 
 galaxy_info:
   role_name: lin_rclone
