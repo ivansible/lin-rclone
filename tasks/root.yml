@@ -32,6 +32,14 @@
   when: lin_rclone_allow_nonroot |bool
   tags: lin_rclone_config
 
+- name: ensure correct permissions on rclone config directory
+  file:
+    path: "{{ lin_rclone_config |expanduser |dirname }}"
+    state: directory
+    group: rclone
+    mode: g+rwx
+  tags: lin_rclone_config
+
 - name: add blockinfile workaround in rclone config and fix access rights
   # without this empty section rclone token refresher will strip last blockinfile comment
   lineinfile:
