@@ -46,7 +46,9 @@
     path: "{{ lin_rclone_config |expanduser }}"
     line: "[end_of_ansible_blocks]"
     create: true
-    owner: root
+    ## rclone periodically updates config file and changes its owner
+    ## so let's keep owner for the sake of idempotence
+    # owner: root
     group: rclone
     mode: 0640
   tags: lin_rclone_config
