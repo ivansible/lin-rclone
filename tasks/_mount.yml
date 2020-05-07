@@ -51,6 +51,10 @@
   vars:
     # explicitly convert token to string to avoid json being treated as a dict
     new_token: "{{ old_token_result.stdout |default('') or _token |string }}"
+  ## task obtaining previous token is skipped in check mode
+  register: rclone_section_result
+  changed_when: rclone_section_result is changed
+                and not (_reuse_token and ansible_check_mode)
   notify: restart remote systemd mounts
 
 - name: create mountpoint for {{ _name }}
