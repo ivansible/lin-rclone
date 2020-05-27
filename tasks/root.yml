@@ -61,9 +61,12 @@
       tags:
         - lin_rclone_config
         - lin_rclone_mounts
+  no_log: "{{ hide_secrets |bool }}"
   vars:
     fstab_default: true
   loop: "{{ lin_rclone_mounts }}"
+  loop_control:
+    label: "{{ item.name |default(item.path) |default('mount...') }}"
   when: item.enabled |default(true)
   tags:
     - lin_rclone_config

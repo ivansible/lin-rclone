@@ -6,22 +6,22 @@
     owner: "{{ lin_rclone_repo_owner }}"
     template: "{download_url}/rclone-{ver}-linux-amd64.deb"
     version_script: "{{ lin_rclone_binary }} version"
-    reinstall: "{{ lin_rclone_allow_reinstall |bool }}"
+    reinstall: "{{ lin_rclone_upgrade |bool }}"
   tags: skip_ansible_lint
-  register: latest_rclone_release
+  register: _rclone_release
 
 - name: install rclone package
   apt:
-    deb: "{{ latest_rclone_release.url }}"
-    only_upgrade: "{{ not lin_rclone_allow_reinstall |bool }}"
-  register: rclone_deb_result
+    deb: "{{ _rclone_release.url }}"
+    only_upgrade: "{{ not lin_rclone_upgrade |bool }}"
+  register: _rclone_deb
   failed_when:
-    rclone_deb_result.failed and
-    rclone_deb_result.msg.find('later version is already installed') == -1
-  when: latest_rclone_release is changed
+    - _rclone_deb.failed
+    - _rclone_deb.msg is not search('later version is already installed')
+  when: _rclone_release is changed
   notify: restart remote systemd mounts
 
 - name: generate rclone bash completion
   command: "{{ lin_rclone_binary }} genautocomplete bash"
-  when: latest_rclone_release is changed
+  when: _rclone_release is changed
 ...

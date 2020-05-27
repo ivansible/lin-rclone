@@ -13,6 +13,7 @@
     _reuse_token: "{{ item.reuse_token |default('') |string |lower not in ['false','no','0',''] }}"
     _reuse_from: "{{ (item.reuse_token |default('') |string |lower in ['true','yes','1',''])
                      |ternary(item.name, item.reuse_token |default('') |string) }}"
+  no_log: "{{ hide_secrets |bool }}"
 
 - name: obtain previous token for {{ _name }}
   shell:
@@ -31,6 +32,7 @@
       except configparser.NoOptionError:
         pass
     executable: "{{ ansible_python.executable }}"
+  no_log: "{{ hide_secrets |bool }}"
   register: old_token_result
   when: _reuse_token
   changed_when: false
@@ -48,20 +50,22 @@
     # rclone token refresher will strip the last end marker comment causing blockinfile mess
     # as a workaround, insert an empty section at the end of file
     insertbefore: "\\[end_of_ansible_blocks\\]"
+  no_log: "{{ hide_secrets |bool }}"
   vars:
     # explicitly convert token to string to avoid json being treated as a dict
     new_token: "{{ old_token_result.stdout |default('') or _token |string }}"
   ## task obtaining previous token is skipped in check mode
   register: rclone_section_result
-  changed_when: rclone_section_result is changed
-                and not (_reuse_token and ansible_check_mode)
+  changed_when:
+    - rclone_section_result is changed
+    - not (_reuse_token and ansible_check_mode)
   notify: restart remote systemd mounts
 
 - name: create mountpoint for {{ _name }}
   file:
     path: "{{ _path }}"
     state: directory
-  when: _path != ''  # noqa 602
+  when: _path |default('')  # noqa 602
 
 - name: setup mount for {{ _name }}
   mount:
@@ -90,6 +94,6 @@
       - "{{ _logto |ternary('log-file=%s' % _logto|expanduser, '') }}"
       - "{{ _logto |ternary('verbose=2', '') }}"
       - "{{ _logto |ternary('x-systemd.mount-timeout=%d' % lin_rclone_mount_timeout, '') }}"
-  when: _path != ''  # noqa 602
+  when: _path |default('')  # noqa 602
   notify: restart remote systemd mounts
 ...

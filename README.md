@@ -16,9 +16,9 @@ None
 Available variables are listed below, along with default values.
 
     lin_rclone_version: latest
-    lin_rclone_allow_reinstall: false
     lin_rclone_repo_owner: rclone
-Set the rclone download location.
+    lin_rclone_upgrade: false
+Set the rclone download location, allow to upgrade already installed binary.
 
     lin_rclone_binary: /usr/bin/rclone
     lin_rclone_config: /etc/rclone/rclone.conf

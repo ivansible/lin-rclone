@@ -3,7 +3,7 @@
 is_permitted: false
 
 lin_rclone_version: latest
-lin_rclone_allow_reinstall: false
+lin_rclone_upgrade: false
 lin_rclone_repo_owner: rclone
 lin_rclone_binary: /usr/bin/rclone
 lin_rclone_config: /etc/rclone/rclone.conf
