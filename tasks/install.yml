@@ -4,7 +4,7 @@
     repository: rclone
     release: "{{ lin_rclone_version }}"
     owner: "{{ lin_rclone_repo_owner }}"
-    template: "{download_url}/rclone-{ver}-linux-amd64.deb"
+    template: "{download_url}/rclone-{ver}-linux-{goarch}.deb"
     version_script: "{{ lin_rclone_binary }} version"
     reinstall: "{{ lin_rclone_upgrade |bool }}"
   tags: skip_ansible_lint
