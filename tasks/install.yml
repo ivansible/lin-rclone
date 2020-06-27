@@ -24,4 +24,8 @@
 - name: generate rclone bash completion
   command: "{{ lin_rclone_binary }} genautocomplete bash"
   when: _rclone_release is changed
+
+- name: install fusermount required by automounter
+  apt:
+    name: fuse
 ...
