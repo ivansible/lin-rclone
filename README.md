@@ -88,6 +88,8 @@ Optional path of debugging log for this mount. If set, the corresponding rclone
 process will run with high verbosity and append to the given log. Good for
 troubleshooting. By default the log is disabled.
 
+    proxy: proto://host:port
+Optional proxy, protocol is one of `http`,`https`,`socks`,`socks5`.
 
 ## Tags
 

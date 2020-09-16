@@ -7,11 +7,11 @@ shift 2
 
 wait=yes
 foreground=no
-rclone={{ lin_rclone_binary }}
+rclone="{{ lin_rclone_binary }}"
 args=""
 
 export PATH=/bin:/usr/bin
-export RCLONE_CONFIG={{ lin_rclone_config }}
+export RCLONE_CONFIG="{{ lin_rclone_config }}"
 export RCLONE_VERBOSE=0
 
 # Process -o parameters
@@ -31,6 +31,9 @@ while getopts :o: opts; do
       _netdev|nofail|x-systemd.*)
         continue ;;
       # wrapper options
+      proxy=*)
+        export http_proxy=${param#proxy=}
+        export https_proxy=${param#proxy=} ;;
       config=*)
         export RCLONE_CONFIG=${param#config=} ;;
       verbose=*)

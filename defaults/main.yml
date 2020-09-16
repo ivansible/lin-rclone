@@ -30,4 +30,5 @@ lin_rclone_mounts: []
 #    automount: false    # optional
 #    nonroot: false      # optional
 #    log: /path/to/log   # optional
+#    proxy: proto://host:port  # optional, proto is http|https|socks|socks5
 ...

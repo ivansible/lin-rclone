@@ -8,6 +8,7 @@
     _automount: "{{ item.path is defined and item.automount |default(false) |bool }}"
     _nonroot: "{{ item.nonroot |default(false) |bool }}"
     _logto: "{{ item.logto |default('') }}"
+    _proxy: "{{ item.proxy |default('') }}"
     # explicitly convert token to string to avoid json being treated as a dict
     _token: "{{ item.token |default('') |string }}"
     _reuse_token: "{{ item.reuse_token |default('') |string |lower not in ['false','no','0',''] }}"
@@ -44,7 +45,7 @@
     # rclone token refresher adds empty lines after sections ends and so do we
     block: |+
       [{{ _name }}]
-      {{ _config |regex_replace('\[TOKEN\]', new_token) }}
+      {{ new_config }}
 
     create: true
     # rclone token refresher will strip the last end marker comment causing blockinfile mess
@@ -54,6 +55,7 @@
   vars:
     # explicitly convert token to string to avoid json being treated as a dict
     new_token: "{{ old_token_result.stdout |default('') or _token |string }}"
+    new_config: "{{ _config |regex_replace('\\[TOKEN\\]', new_token) }}"
   ## task obtaining previous token is skipped in check mode
   register: rclone_section_result
   changed_when:
@@ -84,6 +86,8 @@
       # rclone options
       - vfs-cache-mode={{ lin_rclone_vfs_cache_mode }}
       - dir-cache-time={{ lin_rclone_dir_cache_time }}
+      # rclonefs options
+      - "{{ _proxy |ternary('proxy=%s' % _proxy, '') }}"
       # fuse options
       - "{{ _nonroot |ternary('gid=%d' % lin_rclone_group_gid, '') }}"
       - "{{ _nonroot |ternary('allow_other', '') }}"
