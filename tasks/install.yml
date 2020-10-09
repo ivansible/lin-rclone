@@ -1,29 +1,61 @@
 ---
-- name: detect latest rclone release
-  github_release:
-    repository: rclone
-    release: "{{ lin_rclone_version }}"
-    owner: "{{ lin_rclone_repo_owner }}"
-    template: "{download_url}/rclone-{ver}-linux-{goarch}.deb"
-    version_script: "{{ lin_rclone_binary }} version"
-    reinstall: "{{ lin_rclone_upgrade |bool }}"
-  tags: skip_ansible_lint
-  register: _rclone_release
+- name: install rclone from package
+  block:
+    - name: detect latest rclone package release
+      github_release:
+        repository: rclone
+        release: "{{ lin_rclone_version }}"
+        owner: "{{ lin_rclone_repo_owner }}"
+        template: '{download_url}/rclone-{ver}-linux-{goarch}.deb'
+        strip_v: false
+        version_script: "{{ lin_rclone_binary }} version"
+        script_regex: 'v[0-9][.][0-9.a-zA-Z_-]+'
+        reinstall: "{{ lin_rclone_upgrade |bool }}"
+      tags: skip_ansible_lint
+      register: _rclone_release
 
-- name: install rclone package
-  apt:
-    deb: "{{ _rclone_release.url }}"
-    only_upgrade: "{{ not lin_rclone_upgrade |bool }}"
-  register: _rclone_deb
-  failed_when:
-    - _rclone_deb.failed
-    - _rclone_deb.msg is not search('later version is already installed')
-  when: _rclone_release is changed
-  notify: restart remote systemd mounts
+    - name: install rclone package
+      apt:
+        deb: "{{ _rclone_release.url }}"
+        only_upgrade: "{{ not lin_rclone_upgrade |bool }}"
+      register: _rclone_package
+      failed_when:
+        - _rclone_package.failed
+        - _rclone_package.msg is not search('later version is already installed')
+      when: _rclone_release is changed
+      notify: restart remote systemd mounts
+  when: lin_rclone_from_deb |bool
+
+- name: install rclone binary
+  block:
+    - name: detect latest rclone binary release
+      github_release:
+        repository: rclone
+        release: "{{ lin_rclone_version }}"
+        owner: "{{ lin_rclone_repo_owner }}"
+        template: '{download_url}/rclone-linux-{goarch}'
+        strip_v: false
+        version_script: "{{ lin_rclone_binary }} version"
+        script_regex: 'v[0-9][.][0-9.a-zA-Z_-]+'
+        reinstall: "{{ lin_rclone_upgrade |bool }}"
+      tags: skip_ansible_lint
+      register: _rclone_release
+
+    - name: download and install rclone binary
+      get_url:
+        url: "{{ _rclone_release.url }}"
+        dest: "{{ lin_rclone_binary }}"
+        owner: root
+        group: root
+        mode: 0755
+        force: true
+      register: _rclone_package
+      when: _rclone_release is changed
+  when: not lin_rclone_from_deb |bool
 
 - name: generate rclone bash completion
   command: "{{ lin_rclone_binary }} genautocomplete bash"
-  when: _rclone_release is changed
+  when: _rclone_package is changed
 
 - name: install fusermount required by automounter
   apt:
