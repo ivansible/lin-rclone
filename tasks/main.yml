@@ -1,7 +1,7 @@
 ---
 - name: run rclone tasks as root
   import_tasks: root.yml
-  when: lin_rclone_mounts |default([])
+  when: lin_rclone_mounts |d([])
   become: true
   tags: lin_rclone_all
 

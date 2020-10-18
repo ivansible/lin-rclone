@@ -1,10 +1,27 @@
 ---
 # handlers for ivansible.lin_rclone
 
-- name: restart remote systemd mounts
+- name: reload systemd filesystem target
+  listen: restart remote systemd mounts
   systemd:
     name: remote-fs.target
     state: restarted
     daemon_reload: true
   become: true
+
+- name: restart rclone automounts
+  listen: restart remote systemd mounts
+  systemd:
+    name: "{{ unit }}.automount"
+    state: restarted
+  become: true
+  loop: "{{ lin_rclone_mounts |d([]) }}"
+  loop_control:
+    label: "{{ unit }}"
+  when:
+    - item.enabled |d(true) |bool
+    - item.automount |d(false) |bool
+    - unit |d('')
+  vars:
+    unit: "{{ item.path |d('') |regex_replace('^/+') |replace('/','-') }}"
 ...

@@ -4,16 +4,16 @@
     _name: "{{ item.name }}"
     _path: "{{ item.path }}"
     _config: "{{ item.config }}"
-    _fstab: "{{ item.fstab |default(fstab_default) |bool }}"
-    _automount: "{{ item.path is defined and item.automount |default(false) |bool }}"
-    _nonroot: "{{ item.nonroot |default(false) |bool }}"
-    _logto: "{{ item.logto |default('') }}"
-    _proxy: "{{ item.proxy |default('') }}"
+    _fstab: "{{ item.fstab |d(fstab_default) |bool }}"
+    _automount: "{{ item.path is defined and item.automount |d(false) |bool }}"
+    _nonroot: "{{ item.nonroot |d(false) |bool }}"
+    _logto: "{{ item.logto |d('') }}"
+    _proxy: "{{ item.proxy |d('') }}"
     # explicitly convert token to string to avoid json being treated as a dict
-    _token: "{{ item.token |default('') |string }}"
-    _reuse_token: "{{ item.reuse_token |default('') |string |lower not in ['false','no','0',''] }}"
-    _reuse_from: "{{ (item.reuse_token |default('') |string |lower in ['true','yes','1',''])
-                     |ternary(item.name, item.reuse_token |default('') |string) }}"
+    _token: "{{ item.token |d('') |string }}"
+    _reuse_token: "{{ item.reuse_token |d('') |string |lower not in ['false','no','0',''] }}"
+    _reuse_from: "{{ (item.reuse_token |d('') |string |lower in ['true','yes','1',''])
+                     |ternary(item.name, item.reuse_token |d('') |string) }}"
   no_log: "{{ hide_secrets |bool }}"
 
 - name: obtain previous token for {{ _name }}
@@ -54,7 +54,7 @@
   no_log: "{{ hide_secrets |bool }}"
   vars:
     # explicitly convert token to string to avoid json being treated as a dict
-    new_token: "{{ old_token_result.stdout |default('') or _token |string }}"
+    new_token: "{{ old_token_result.stdout |d('') or _token |string }}"
     new_config: "{{ _config |regex_replace('\\[TOKEN\\]', new_token) }}"
   ## task obtaining previous token is skipped in check mode
   register: rclone_section_result
@@ -67,7 +67,7 @@
   file:
     path: "{{ _path }}"
     state: directory
-  when: _path |default('')  # noqa 602
+  when: _path |d('')
 
 - name: setup mount for {{ _name }}
   mount:
@@ -98,6 +98,6 @@
       - "{{ _logto |ternary('log-file=%s' % _logto|expanduser, '') }}"
       - "{{ _logto |ternary('verbose=2', '') }}"
       - "{{ _logto |ternary('x-systemd.mount-timeout=%d' % lin_rclone_mount_timeout, '') }}"
-  when: _path |default('')  # noqa 602
+  when: _path |d('')
   notify: restart remote systemd mounts
 ...

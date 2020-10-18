@@ -66,8 +66,8 @@
     fstab_default: true
   loop: "{{ lin_rclone_mounts }}"
   loop_control:
-    label: "{{ item.name |default(item.path) |default('mount...') }}"
-  when: item.enabled |default(true)
+    label: "{{ item.name |d(item.path) |d('mount...') }}"
+  when: item.enabled |d(true)
   tags:
     - lin_rclone_config
     - lin_rclone_mounts
