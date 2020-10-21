@@ -12,8 +12,10 @@ lin_rclone_config: /etc/rclone/rclone.conf
 lin_rclone_allow_nonroot: false
 lin_rclone_group_gid: 911
 
+lin_rclone_prefer_systemd: false
 lin_rclone_idle_timeout: 900
 lin_rclone_mount_timeout: 10
+lin_rclone_mount_verb: ~  # mount, cmount, mount2 or none
 lin_rclone_vfs_cache_mode: writes
 lin_rclone_dir_cache_time: 30s
 
@@ -27,9 +29,10 @@ lin_rclone_mounts: []
 #    reuse_token: false  # optional
 #    token: '{json...}'  # required unless reuse_token
 #    enabled: true       # optional
-#    fstab: true         # optional
+#    mount: true         # optional
+#    systemd: false      # optional (depends on lin_rclone_prefer_systemd)
 #    automount: false    # optional
 #    nonroot: false      # optional
-#    log: /path/to/log   # optional
+#    bglog: false        # optional
 #    proxy: proto://host:port  # optional, proto is http|https|socks|socks5
 ...

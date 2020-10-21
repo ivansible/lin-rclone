@@ -1,7 +1,8 @@
 # ivansible.lin_rclone
 
 This role installs rclone on linux, creates fuse wrapper for mount,
-configures remotes, adds fstab entries and triggers systemd automounter.
+configures remotes, adds fstab entries or systemd mount units
+and triggers systemd automounter.
 It also creates the `rclone` group for read-only access to rclone
 configuration and non-root mounts.
 
@@ -34,6 +35,7 @@ have read access to rclone configuration and non-root rclone mounts.
     lin_rclone_mount_timeout: 10
     lin_rclone_vfs_cache_mode: writes
     lin_rclone_dir_cache_time: 30s
+    lin_rclone_mount_verb: mount, cmount, mount2 or none
 The settings configure a few specific mount options.
 
     lin_rclone_mounts: []
@@ -45,7 +47,8 @@ List of mounts. Every mount is described by a dictionary explained below.
 The name of remote. Required.
 
     path: /mnt/remote
-Mount point. Required even if `fstab` is `no` (it's then removed from /etc/fstab).
+Mount point.
+Required even if `mount` is `no` (it's then removed from fstab and systemd).
 
     enabled: true
 Optional boolean, defaults to `true`. If false, ansible will just skip this item.
@@ -71,9 +74,14 @@ found, ansible will fall back to the literal token above. The previous
 token is by default looked up in the same section as this remote name, but
 you can provide a custom section name instead of true here.
 
-    fstab: true
+    mount: true
 Optional boolean. When true (the default), the mount will be added to
-`/etc/fstab`. When false, the mount entry will be removed if found.
+fstab or systemd. When false, the mount entry will be removed (if found).
+
+    systemd: <depends on lin_rclone_prefer_systemd>
+Optional boolean, defaults to `lin_rclone_prefer_systemd`.
+If true, a systemd unit will be created.
+If false, a fstab line will be added.
 
     automount: false
 Optional boolean, defaults to false. If true, the systemd automounter will
@@ -83,10 +91,8 @@ be enabled for the corresponding fstab entry.
 Normally rclone mounts are only accessible to root. If `nonroot` is true,
 the mount will be read-only accessible by the members of group `rclone`.
 
-    log: /path/to/log
-Optional path of debugging log for this mount. If set, the corresponding rclone
-process will run with high verbosity and append to the given log. Good for
-troubleshooting. By default the log is disabled.
+    bglog: false
+If true, the background rclone process will dump a debugging log in /tmp.
 
     proxy: proto://host:port
 Optional proxy, protocol is one of `http`,`https`,`socks`,`socks5`.
@@ -96,7 +102,7 @@ Optional proxy, protocol is one of `http`,`https`,`socks`,`socks5`.
 - `lin_rclone_install` -- install rclone
 - `lin_rclone_wrapper` -- create fuse wrapper for mount
 - `lin_rclone_config` -- add remotes in config file
-- `lin_rclone_mounts` -- create fstab entries and configure system automount
+- `lin_rclone_mounts` -- create fstab/systemd entries and configure automount
 - `lin_rclone_all` -- all of the above
 
 

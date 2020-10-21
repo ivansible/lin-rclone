@@ -3,17 +3,58 @@
   set_fact:
     _name: "{{ item.name }}"
     _path: "{{ item.path }}"
+    _unit_path: "/etc/systemd/system/{{ item.path |regex_replace('^/') |replace('/','-') }}"
     _config: "{{ item.config }}"
-    _fstab: "{{ item.fstab |d(fstab_default) |bool }}"
-    _automount: "{{ item.path is defined and item.automount |d(false) |bool }}"
-    _nonroot: "{{ item.nonroot |d(false) |bool }}"
-    _logto: "{{ item.logto |d('') }}"
-    _proxy: "{{ item.proxy |d('') }}"
+    _mount: "{{ mount |bool }}"
+    _systemd: "{{ systemd |bool }}"
+    _fstab: "{{ fstab |bool }}"
+    _automount: "{{ automount |bool }}"
+    _nonroot: "{{ nonroot |bool }}"
+    _bglog: "{{ bglog |bool }}"
+    _proxy: "{{ proxy }}"
     # explicitly convert token to string to avoid json being treated as a dict
-    _token: "{{ item.token |d('') |string }}"
-    _reuse_token: "{{ item.reuse_token |d('') |string |lower not in ['false','no','0',''] }}"
-    _reuse_from: "{{ (item.reuse_token |d('') |string |lower in ['true','yes','1',''])
-                     |ternary(item.name, item.reuse_token |d('') |string) }}"
+    _token: "{{ token }}"
+    _reuse_token: "{{ reuse_lower not in ['false','no','0',''] }}"
+    _reuse_from: "{{ reuse_bool |ternary(item.name, reuse_str) }}"
+    _options_str: "{{ options_list |select |join(',') }}"
+  vars:
+    options_list:
+      # basic options
+      - rw
+      - "{{ fstab |bool |ternary('noauto','') }}"
+      - "{{ fstab |bool |ternary('nofail','') }}"
+      - "{{ fstab |bool |ternary('_netdev','') }}"
+      # fuse options
+      - "{{ nonroot |bool |ternary('gid=%s' % group_gid, '') }}"
+      - "{{ nonroot |bool |ternary('allow_other', '') }}"
+      # rclone options
+      - "{{ cache_mode |ternary('vfs-cache-mode=%s' % cache_mode, '') }}"
+      - "{{ cache_time |ternary('dir-cache-time=%s' % cache_time, '') }}"
+      # rclonefs options
+      - "{{ proxy |ternary('proxy=%s' % proxy, '') }}"
+      # systemd / automount options
+      - "{{ fstab_automount |bool |ternary('x-systemd.automount', '') }}"
+      - "{{ fstab_automount |bool |ternary('x-systemd.idle-timeout=%d' % lin_rclone_idle_timeout, '') }}"
+      # troubleshooting options
+      - "{{ mount_verb_default |bool |ternary('', 'mount-verb=%s' % mount_verb_str) }}"
+      - "{{ bglog |bool |ternary('bglog', '') }}"
+    mount: "{{ item.mount |d(true) |bool }}"
+    systemd: "{{ item.systemd |d(lin_rclone_prefer_systemd) |d(false) |bool }}"
+    automount: "{{ item.path is defined and item.automount |d(false) |bool }}"
+    fstab: "{{ mount |bool and not systemd |bool }}"
+    fstab_automount: "{{ fstab |bool and automount |bool }}"
+    nonroot: "{{ item.nonroot |d(false) |bool }}"
+    bglog: "{{ item.bglog |d(false) |bool }}"
+    proxy: "{{ item.proxy |d('') }}"
+    token: "{{ item.token |d('') |string }}"
+    reuse_str: "{{ item.reuse_token |d('') |string }}"
+    reuse_lower: "{{ reuse_str |lower }}"
+    reuse_bool: "{{ reuse_lower in ['true','yes','1',''] }}"
+    group_gid: "{{ lin_rclone_group_gid |d(1000) }}"
+    cache_mode: "{{ lin_rclone_vfs_cache_mode |d('',true) }}"
+    cache_time: "{{ lin_rclone_dir_cache_time |d('',true) }}"
+    mount_verb_str: "{{ lin_rclone_mount_verb |d('',true) |string }}"
+    mount_verb_default: "{{ mount_verb_str in ['mount', 'default', ''] }}"
   no_log: "{{ hide_secrets |bool }}"
 
 - name: obtain previous token for {{ _name }}
@@ -69,35 +110,50 @@
     state: directory
   when: _path |d('')
 
-- name: setup mount for {{ _name }}
+- name: setup fstab mount for {{ _name }}
   mount:
     path: "{{ _path }}"
     src: "{{ _name }}:"
     fstype: rclone
     state: "{{ _fstab |ternary('present', 'absent') }}"
-    opts: "{{ options |select |join(',') }}"
-  vars:
-    options:
-      # basic options
-      - rw
-      - _netdev
-      - noauto
-      - nofail
-      # rclone options
-      - vfs-cache-mode={{ lin_rclone_vfs_cache_mode }}
-      - dir-cache-time={{ lin_rclone_dir_cache_time }}
-      # rclonefs options
-      - "{{ _proxy |ternary('proxy=%s' % _proxy, '') }}"
-      # fuse options
-      - "{{ _nonroot |ternary('gid=%d' % lin_rclone_group_gid, '') }}"
-      - "{{ _nonroot |ternary('allow_other', '') }}"
-      # systemd / automount options
-      - "{{ _automount |ternary('x-systemd.automount', '') }}"
-      - "{{ _automount |ternary('x-systemd.idle-timeout=%d' % lin_rclone_idle_timeout, '') }}"
-      # troubleshooting options
-      - "{{ _logto |ternary('log-file=%s' % _logto|expanduser, '') }}"
-      - "{{ _logto |ternary('verbose=2', '') }}"
-      - "{{ _logto |ternary('x-systemd.mount-timeout=%d' % lin_rclone_mount_timeout, '') }}"
+    opts: "{{ _options_str }}"
   when: _path |d('')
+  notify: restart remote systemd mounts
+
+- name: setup systemd mount unit for {{ _name }}
+  template:
+    src: systemd.mount
+    dest: "{{ _unit_path }}.mount"
+    mode: 0644
+  when:
+    - _path |d('')
+    - _mount |bool
+    - _systemd |bool
+  notify: restart remote systemd mounts
+
+- name: setup systemd automount unit for {{ _name }}
+  template:
+    src: systemd.automount
+    dest: "{{ _unit_path }}.automount"
+    mode: 0644
+  when:
+    - _path |d('')
+    - _mount |bool
+    - _systemd |bool
+    - _automount |bool
+  notify: restart remote systemd mounts
+
+- name: remove systemd mount unit for {{ _name }}
+  file:
+    path: "{{ _unit_path }}.mount"
+    state: absent
+  when: not(_systemd and _mount)
+  notify: restart remote systemd mounts
+
+- name: remove systemd automount unit for {{ _name }}
+  file:
+    path: "{{ _unit_path }}.automount"
+    state: absent
+  when: not(_systemd and _mount and _automount)
   notify: restart remote systemd mounts
 ...

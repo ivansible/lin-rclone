@@ -1,0 +1,13 @@
+# ansible-managed
+
+[Unit]
+Description=rclone automount {{ _name }}
+Before=remote-fs.target
+After=network-online.target
+
+[Automount]
+Where={{ _path }}
+TimeoutIdleSec={{ lin_rclone_idle_timeout }}
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+# ansible-managed
+
+[Unit]
+Description=rclone mount {{ _name }}
+After=network-online.target
+
+[Mount]
+Where={{ _path }}
+What={{ _name }}{{ ':' }}
+Type=rclone
+Options={{ _options_str }}

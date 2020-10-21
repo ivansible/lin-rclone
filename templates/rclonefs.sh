@@ -8,6 +8,7 @@ shift 2
 wait=yes
 bglog=no
 foreground=no
+mount_verb=mount
 rclone="{{ lin_rclone_binary }}"
 args=""
 
@@ -39,6 +40,8 @@ while getopts :o: opts; do
         export RCLONE_CONFIG=${param#*=} ;;
       verbose=*)
         export RCLONE_VERBOSE=${param#*=} ;;
+      mount-verb=*)
+        mount_verb=${param#*=} ;;
       nowait)
         wait=no ;;
       foreground)
@@ -77,7 +80,7 @@ if [ $foreground = yes ]; then
 else
   # NOTE: --daemon hangs under systemd automount, using `&`
   # shellcheck disable=SC2086
-  "$rclone" mount $args "$remote" "$mountpoint" </dev/null >&/dev/null &
+  "$rclone" "$mount_verb" $args "$remote" "$mountpoint" </dev/null >&/dev/null &
   while [ $wait = yes ] && [ "$(grep -c " ${mountpoint} fuse.rclone " /proc/mounts)" = 0 ]; do
     sleep 0.5
   done
