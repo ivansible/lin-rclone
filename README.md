@@ -38,6 +38,9 @@ have read access to rclone configuration and non-root rclone mounts.
     lin_rclone_mount_verb: mount, cmount, mount2 or none
 The settings configure a few specific mount options.
 
+    lin_rclone_bash_alias: true
+Create command alias _rc_ in user profile.
+
     lin_rclone_mounts: []
 List of mounts. Every mount is described by a dictionary explained below.
 
@@ -103,6 +106,7 @@ Optional proxy, protocol is one of `http`,`https`,`socks`,`socks5`.
 - `lin_rclone_wrapper` -- create fuse wrapper for mount
 - `lin_rclone_config` -- add remotes in config file
 - `lin_rclone_mounts` -- create fstab/systemd entries and configure automount
+- `lin_rclone_bashrc` -- create bash alias for rclone
 - `lin_rclone_all` -- all of the above
 
 

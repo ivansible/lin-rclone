@@ -11,6 +11,7 @@ lin_rclone_config: /etc/rclone/rclone.conf
 
 lin_rclone_allow_nonroot: false
 lin_rclone_group_gid: 911
+lin_rclone_bash_alias: true
 
 lin_rclone_prefer_systemd: false
 lin_rclone_idle_timeout: 900

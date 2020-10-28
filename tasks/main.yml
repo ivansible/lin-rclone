@@ -1,9 +1,19 @@
 ---
 - name: run rclone tasks as root
   import_tasks: root.yml
-  when: lin_rclone_mounts |d([])
   become: true
+  when: lin_rclone_mounts |d([],true)
   tags: lin_rclone_all
+
+- name: user bash addons for rclone
+  import_tasks: bashrc.yml
+  become: false
+  when:
+    - lin_rclone_mounts |d([],true)
+    - lin_rclone_bash_alias |bool
+  tags:
+    - lin_rclone_bashrc
+    - lin_rclone_all
 
 - name: reload systemd mounts now
   meta: flush_handlers
