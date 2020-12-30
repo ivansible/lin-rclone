@@ -11,6 +11,10 @@ configuration and non-root mounts.
 
 
 
+## Note
+
+I only change some default mount options. Most based on [rclone-vfs.service](https://raw.githubusercontent.com/no5tyle/UltraSeedbox-Scripts/master/MergerFS-Rclone/rclone-vfs.service)
+
 ## Requirements
 
 None
