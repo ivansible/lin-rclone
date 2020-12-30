@@ -5,6 +5,11 @@ configures remotes, adds fstab entries and triggers systemd automounter.
 It also creates the `rclone` group for read-only access to rclone
 configuration and non-root mounts.
 
+## Updates
+
+* Added `- rcaddr=127.0.0.1:48888` option to rclonefs  
+
+
 
 ## Requirements
 

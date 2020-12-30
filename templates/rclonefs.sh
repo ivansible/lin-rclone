@@ -35,6 +35,10 @@ while getopts :o: opts; do
         export RCLONE_CONFIG=${param#config=} ;;
       verbose=*)
         export RCLONE_VERBOSE=${param#verbose=} ;;
+      rcaddr=*)
+        export RCLONE_RC=true
+        export RCLONE_RC_NO_AUTH=true
+        export RCLONE_RC_ADDR=${param#rcaddr=} ;;       
       nowait)
         wait=no ;;
       foreground)
