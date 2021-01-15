@@ -4,4 +4,17 @@ lin_use_ssh: false
 lin_firewall: none
 allow_sysctl: false
 lin_core_time_sync: false
+
+lin_rclone_allow_nonroot: false
+lin_rclone_mounts:
+  - name: test1
+    path: /mnt/test1
+    config: |
+      type = alias
+      remote = /bin
+  - name: test2
+    path: /mnt/test2
+    config: |
+      type = alias
+      remote = /bin
 ...

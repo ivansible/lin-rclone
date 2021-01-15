@@ -1,8 +1,28 @@
 ---
 - name: verify
   hosts: all
+  become: true
   tasks:
-    - name: nothing to test
-      debug:
-        msg: 'tests complete'
+    - name: vars
+      include_vars: vars.yml
+
+    - name: unmount old mounts
+      command: umount "{{ item.path }}"  # noqa 301 303
+      args: {warn: false}
+      ignore_errors: true
+      loop: "{{ lin_rclone_mounts }}"
+      loop_control: {label: "{{ item.name }}"}
+
+    - name: mount rclone dirs
+      command: mount "{{ item.path }}"  # noqa 301 303
+      args: {warn: false}
+      loop: "{{ lin_rclone_mounts }}"
+      loop_control: {label: "{{ item.name }}"}
+
+    - name: verify mount correctness
+      file:
+        path: "{{ item.path }}/bash"
+        state: file
+      loop: "{{ lin_rclone_mounts }}"
+      loop_control: {label: "{{ item.name }}"}
 ...
