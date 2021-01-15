@@ -1,0 +1,7 @@
+---
+is_permitted: false
+lin_use_ssh: false
+lin_firewall: none
+allow_sysctl: false
+lin_core_time_sync: false
+...

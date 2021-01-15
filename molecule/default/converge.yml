@@ -1,0 +1,9 @@
+---
+- name: converge
+  hosts: all
+  pre_tasks:
+    - name: vars
+      include_vars: vars.yml
+  roles:
+    - role: ivansible.lin_rclone
+...

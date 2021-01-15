@@ -1,0 +1,54 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: xenial
+    image: ivandeex/molecule:16.04
+    command: ""
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true
+    groups:
+      - molecule
+  - name: bionic
+    image: ivandeex/molecule:18.04
+    command: ""
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true
+    groups:
+      - molecule
+provisioner:
+  name: ansible
+  inventory:
+    group_vars:
+      molecule:
+        ansible_user: ansible
+        lin_core_system_locale: en_US.UTF-8
+  lint:
+    name: ansible-lint
+verifier:
+  name: ansible
+  lint:
+    name: ansible-lint
+    enabled: false
+scenario:
+  name: default
+  converge_sequence:
+    - converge
+  test_sequence:
+    - lint
+    - dependency
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - verify
+    - destroy
+...

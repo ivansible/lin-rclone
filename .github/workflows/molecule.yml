@@ -1,0 +1,90 @@
+---
+name: Molecule test
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+  pull_request:
+
+env:
+  ROLE_NAME: ivansible.lin_rclone
+  ANSIBLE_FORCE_COLOR: true
+
+jobs:
+  localhost_test:
+    name: test on host
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-16.04
+          - ubuntu-18.04
+    env:
+      SCENARIO: localhost
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          path: ivansible/${{ env.ROLE_NAME }}
+
+      - name: Install requisites
+        shell: bash
+        run: |
+          # stock and pypy flavors of PyYAML are incompatible
+          sudo apt-get remove -q -y python3-yaml
+          # pip 21 will drop python 3.5 support
+          sudo -H pip3 install -U "pip<21" setuptools wheel
+          # cryptography 2.9 has sane xenial wheels, works with old openssl
+          if [[ "${{ matrix.os }}" = "ubuntu-16.04" ]]; then sudo -H pip3 install "cryptography==2.9"; fi
+          # postpone ansible 2.10, molecule 3.2
+          sudo -H pip3 install "ansible<2.10"
+          sudo -H pip3 install "mitogen<0.3"
+          sudo -H pip3 install "molecule[docker]<3.2"
+          # pull dependencies
+          sudo -H pip3 install ansible-lint yamllint flake8
+          sudo -H pip3 install boto3 jmespath netaddr pytest testinfra
+          sudo -H pip3 install docker
+
+      - name: Run test
+        shell: bash
+        run: cd ivansible/$ROLE_NAME && molecule test -s $SCENARIO
+
+  docker_test:
+    name: tests in docker
+    runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: false
+    env:
+      SCENARIO: default
+
+    steps:  # copy-pasting above steps since anchors are unsupported
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          path: ivansible/${{ env.ROLE_NAME }}
+
+      - name: Install requisites
+        shell: bash
+        run: |
+          # stock and pypy flavors of PyYAML are incompatible
+          sudo apt-get remove -q -y python3-yaml
+          # pip 21 will drop python 3.5 support
+          sudo -H pip3 install -U "pip<21" setuptools wheel
+          # postpone ansible 2.10, molecule 3.2
+          sudo -H pip3 install "ansible<2.10"
+          sudo -H pip3 install "mitogen<0.3"
+          sudo -H pip3 install "molecule[docker]<3.2"
+          # pull dependencies
+          sudo -H pip3 install ansible-lint yamllint flake8
+          sudo -H pip3 install boto3 jmespath netaddr pytest testinfra
+          sudo -H pip3 install docker
+
+      - name: Run test
+        shell: bash
+        run: cd ivansible/$ROLE_NAME && molecule test -s $SCENARIO
+...

@@ -1,0 +1,8 @@
+---
+- src: https://github.com/ivansible/lin-base
+  name: ivansible.lin_base
+  scm: git
+- src: https://github.com/ivansible/lin-core
+  name: ivansible.lin_core
+  scm: git
+...
