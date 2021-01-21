@@ -1,0 +1,86 @@
+---
+name: test
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+  pull_request:
+
+jobs:
+  test:
+    env:
+      ROLE_NAME: ivansible.lin_rclone
+      SCENARIO: ${{ matrix.scenario }}
+      ANSIBLE_FORCE_COLOR: true
+
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: xenial
+            os: ubuntu-16.04
+            scenario: localhost
+
+          - name: bionic
+            os: ubuntu-18.04
+            scenario: localhost
+
+          - name: focal
+            os: ubuntu-20.04
+            scenario: localhost
+
+          - name: docker
+            os: ubuntu-latest
+            scenario: default
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v2
+        with:
+          path: ivansible/${{ env.ROLE_NAME }}
+
+      - name: fix pip issues on xenial
+        if: ${{ matrix.os == 'ubuntu-16.04' }}
+        run: |
+          # stock and pypi flavors of pyYAML are incompatible
+          sudo apt-get remove -qy python3-yaml
+          sudo apt-get install -qy libyaml-dev
+          sudo -H pip3 install -U pip==20.3.3 setuptools==50.3.2 wheel==0.36.2
+          sudo -H pip3 install cryptography==2.9 pyyaml==5.3.1
+
+      - name: upgrade pip
+        if: ${{ matrix.os != 'ubuntu-16.04' }}
+        run: |
+          sudo apt-get remove -q -y python3-yaml
+          sudo -H pip3 install -U pip setuptools wheel
+
+      - name: install requisites
+        run: |
+          # postpone ansible 2.10 and molecule 3.2
+          sudo -H pip3 install ansible==2.9.14 mitogen==0.2.9
+          sudo -H pip3 install "molecule[docker]<3.2"
+          # pull dependencies
+          sudo -H pip3 install ansible-lint yamllint flake8 pytest pytest-testinfra
+          sudo -H pip3 install boto3 jmespath netaddr docker
+
+      - name: run test
+        run: |
+          cd ivansible/${{ env.ROLE_NAME }}
+          molecule test -s ${{ matrix.scenario }}
+
+  galaxy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: push role to galaxy
+        uses: 0x022b/galaxy-role-import-action@v1
+        with:
+          galaxy_api_key: ${{ secrets.GALAXY_API_KEY }}
+...

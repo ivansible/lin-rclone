@@ -5,6 +5,7 @@
   tasks:
     - name: vars
       include_vars: vars.yml
+      tags: always
 
     - name: unmount old mounts
       command: umount "{{ item.path }}"  # noqa 301 303

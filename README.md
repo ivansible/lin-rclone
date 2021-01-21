@@ -1,5 +1,8 @@
 # ivansible.lin_rclone
 
+[![Github Test Status](https://github.com/ivansible/lin-rclone/workflows/test/badge.svg?branch=master)](https://github.com/ivansible/lin-rclone/actions)
+[![Ansible Galaxy](https://img.shields.io/badge/galaxy-ivansible.lin__rclone-68a.svg?style=flat)](https://galaxy.ansible.com/ivansible/lin_rclone/)
+
 This role installs rclone on linux, creates fuse wrapper for mount,
 configures remotes, adds fstab entries or systemd mount units
 and triggers systemd automounter.
@@ -139,4 +142,4 @@ MIT
 
 ## Author Information
 
-Created in 2019-2020 by [IvanSible](https://github.com/ivansible)
+Created in 2019-2021 by [IvanSible](https://github.com/ivansible)
