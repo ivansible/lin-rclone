@@ -26,14 +26,14 @@
       notify: restart remote systemd mounts
   when: lin_rclone_from_deb |bool
 
-- name: install rclone binary
+- name: install rclone from zip archive
   block:
-    - name: detect latest rclone binary release
+    - name: detect latest rclone archive release
       github_release:
         repository: rclone
         release: "{{ lin_rclone_version }}"
         owner: "{{ lin_rclone_repo_owner }}"
-        template: '{download_url}/rclone-linux-{goarch}'
+        template: '{download_url}/rclone-{ver}-linux-{goarch}.zip'
         strip_v: false
         version_script: "{{ lin_rclone_binary }} version"
         script_regex: 'v[0-9][.][0-9.a-zA-Z_-]+'
@@ -41,14 +41,19 @@
       tags: skip_ansible_lint
       register: _rclone_release
 
-    - name: download and install rclone binary
-      get_url:
+    - name: download and install rclone zip archive
+      unarchive:
+        remote_src: true
+        src: "{{ url }}"
+        dest: "{{ lin_rclone_binary |dirname }}"
+        extra_opts: '-j'  # junk (flatten) directories
+        exclude:
+          - "{{ dir }}/rclone.1"
+          - "{{ dir }}/README.txt"
+          - "{{ dir }}/README.html"
+      vars:
         url: "{{ _rclone_release.url }}"
-        dest: "{{ lin_rclone_binary }}"
-        owner: root
-        group: root
-        mode: 0755
-        force: true
+        dir: "{{ url |basename |splitext |first }}"
       register: _rclone_package
       when: _rclone_release is changed
   when: not lin_rclone_from_deb |bool
