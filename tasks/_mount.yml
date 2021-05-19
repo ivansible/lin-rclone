@@ -27,7 +27,8 @@
       # fuse options
       - "{{ nonroot |bool |ternary('gid=%s' % group_gid, '') }}"
       - "{{ nonroot |bool |ternary('allow_other', '') }}"
-      # rclone options
+      # vfs options
+      - "{{ cache_dir |ternary('cache_dir=%s' % cache_dir, '') }}"
       - "{{ cache_mode |ternary('vfs-cache-mode=%s' % cache_mode, '') }}"
       - "{{ cache_time |ternary('dir-cache-time=%s' % cache_time, '') }}"
       # rclonefs options
@@ -50,6 +51,7 @@
     reuse_str: "{{ item.reuse_token |d('') |string }}"
     reuse_lower: "{{ reuse_str |lower }}"
     reuse_bool: "{{ reuse_lower in ['true','yes','1',''] }}"
+    cache_dir: "{{ item.cache_dir |d('',true) }}"
     group_gid: "{{ lin_rclone_group_gid |d(1000) }}"
     cache_mode: "{{ lin_rclone_vfs_cache_mode |d('',true) }}"
     cache_time: "{{ lin_rclone_dir_cache_time |d('',true) }}"

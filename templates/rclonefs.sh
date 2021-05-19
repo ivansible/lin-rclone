@@ -16,6 +16,14 @@ export PATH=/bin:/usr/bin
 export RCLONE_CONFIG="{{ lin_rclone_config }}"
 export RCLONE_VERBOSE=0
 
+export RCLONE_CACHE_DIR="{{ lin_rclone_cache_dir }}"
+unset RCLONE_VFS_CACHE_MODE
+unset RCLONE_DIR_CACHE_TIME
+unset RCLONE_UID
+unset RCLONE_GID
+unset RCLONE_ALLOW_ROOT
+unset RCLONE_ALLOW_OTHER
+
 # Process -o parameters
 while getopts :o: opts; do
   if [ "$opts" != "o" ]; then
@@ -48,12 +56,24 @@ while getopts :o: opts; do
         foreground=yes ;;
       bglog)
         bglog=yes ;;
-      # fuse / rclone options
-      allow_other|allow_root|uid=*|gid=*)
-        args="$args --${param//_/-}" ;;
-      # rclone options
-      *)
-        args="$args --$param" ;;
+      # vfs options
+      cache-dir=*)
+        export RCLONE_CACHE_DIR=${param#*=} ;;
+      vfs-cache-mode=*)
+        export RCLONE_VFS_CACHE_MODE=${param#*=} ;;
+      dir-cache-time=*)
+        export RCLONE_DIR_CACHE_TIME=${param#*=} ;;
+      # fuse options
+      uid=*)
+        export RCLONE_UID=${param#*=} ;;
+      gid=*)
+        export RCLONE_GID=${param#*=} ;;
+      allow_root)
+        export RCLONE_ALLOW_ROOT=true ;;
+      allow_other)
+        export RCLONE_ALLOW_OTHER=true ;;
+      # other rclone options
+      *) args="$args --$param" ;;
     esac
   done
 done

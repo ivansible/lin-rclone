@@ -53,6 +53,17 @@
     mode: 0640
   tags: lin_rclone_config
 
+- name: ensure correct permissions on rclone cache directory
+  file:
+    path: "{{ lin_rclone_cache_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+  tags:
+    - lin_rclone_config
+    - lin_rclone_mounts
+
 - name: setup rclone mounts
   include_tasks: _mount.yml
   args:
