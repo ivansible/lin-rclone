@@ -1,0 +1,53 @@
+---
+- name: query previous rclone docker plugin
+  shell:
+    cmd: |
+      set -o pipefail
+      docker plugin list | awk '($2=="{{ alias }}:latest"){print $1}'
+    executable: bash
+  register: _old_plugin
+  changed_when: false
+
+- name: upgrade previous rclone docker plugin
+  shell:
+    cmd: |
+      set -e
+      docker plugin disable {{ alias }} || true
+      docker plugin upgrade {{ alias }} --grant-all-permissions
+      docker plugin enable {{ alias }}
+    executable: bash
+  when:
+    - upgrade
+    - _old_plugin.stdout |d("")
+
+- name: install rclone docker plugin
+  shell:
+    cmd: |
+      if [ -n "{{ old_id }}" ]; then
+        docker plugin disable {{ alias }} || true
+        docker plugin remove {{ alias }}
+      fi
+      echo "install options: {{ options_str }}"
+      docker plugin install {{ image }} --grant-all-permissions {{ options_str }}
+  vars:
+    image: "{{ lin_rclone_docker_plugin_image }}"
+    options_str: "{{ options_list |select |join(' ') }}"
+    options_list:
+      - "--alias {{ alias }}"
+      - "{{ opt_args if val_args else '' }}"
+      - "{{ opt_config if val_config else '' }}"
+      - "{{ opt_cache if val_cache else '' }}"
+      - "{{ opt_verbose if val_verbose != '' else '' }}"
+    opt_args: 'args="{{ val_args }}"'
+    opt_config: 'config="{{ val_config }}"'
+    opt_cache: 'cache="{{ val_cache }}"'
+    opt_verbose: 'RCLONE_VERBOSE={{ val_verbose }}'
+    val_args: "{{ lin_rclone_docker_plugin_args |d('',true) }}"
+    val_config: "{{ lin_rclone_docker_plugin_config |d('',true) }}"
+    val_cache: "{{ lin_rclone_docker_plugin_cache |d('',true) }}"
+    val_verbose: "{{ lin_rclone_docker_plugin_verbose |d('',true) |string }}"
+    old_id: "{{ _old_plugin.stdout }}"
+  when:
+    - reinstall or not old_id
+    - not upgrade
+...

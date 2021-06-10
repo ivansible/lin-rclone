@@ -80,4 +80,14 @@
   tags:
     - lin_rclone_config
     - lin_rclone_mounts
+
+- name: setup docker rclone plugin
+  ## this task should go AFTER mounts because docker plugin will rewrite config file at startup
+  import_tasks: docker_plugin.yml
+  vars:
+    alias: "{{ lin_rclone_docker_plugin_alias |d('rclone') }}"
+    upgrade: "{{ lin_rclone_docker_plugin_upgrade |bool }}"
+    reinstall: "{{ lin_rclone_docker_plugin_reinstall |bool }}"
+  when: lin_rclone_docker_plugin_enable |bool
+  tags: lin_rclone_docker_plugin
 ...

@@ -21,6 +21,16 @@ lin_rclone_cache_dir: /var/cache/rclone
 lin_rclone_vfs_cache_mode: writes
 lin_rclone_dir_cache_time: 30s
 
+lin_rclone_docker_plugin_enable: "{{ lin_use_docker }}"
+lin_rclone_docker_plugin_image: ivandeex/docker-volume-rclone:latest
+lin_rclone_docker_plugin_alias: rclone
+lin_rclone_docker_plugin_upgrade: false
+lin_rclone_docker_plugin_reinstall: false
+lin_rclone_docker_plugin_verbose: ~    # verbosity 0-2
+lin_rclone_docker_plugin_args: ~       # command-line arguments
+lin_rclone_docker_plugin_config: ~     # directory with rclone.conf
+lin_rclone_docker_plugin_cache: ~      # directory for cache
+
 lin_rclone_mounts: []
 #  - name: remote        # required
 #    path: /mnt/remote   # required
