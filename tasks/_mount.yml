@@ -59,6 +59,22 @@
     mount_verb_default: "{{ mount_verb_str in ['mount', 'default', ''] }}"
   no_log: "{{ hide_secrets |bool }}"
 
+- name: validate name and path of {{ _name }}
+  assert:
+    that:
+      - _name is match('^[a-zA-Z0-9_]+$')
+      - _path is match('^[a-zA-Z0-9_/]+$')
+    msg: "name and path must contain alphanumerics and underscores only, dashes are prohibited!"
+    quiet: true
+
+- name: validate config of {{ _name }}
+  assert:
+    that:
+      - _config.strip() is not match('^\[')
+      - not _reuse_token or _config is search('\[TOKEN\]')
+    msg: "section must not start with preamble and should optionally have a token"
+    quiet: true
+
 - name: obtain previous token for {{ _name }}
   shell:
     cmd: |
