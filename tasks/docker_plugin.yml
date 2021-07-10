@@ -1,4 +1,13 @@
 ---
+- name: create plugin directories
+  file:
+    path: /var/lib/docker-plugins/{{ alias }}/{{ item }}
+    state: directory
+    owner: root
+    group: rclone
+    mode: 0775
+  loop: [config, cache]
+
 - name: query previous rclone docker plugin
   shell:
     cmd: |
@@ -46,7 +55,7 @@
     val_config: "{{ lin_rclone_docker_plugin_config |d('',true) }}"
     val_cache: "{{ lin_rclone_docker_plugin_cache |d('',true) }}"
     val_verbose: "{{ lin_rclone_docker_plugin_verbose |d('',true) |string }}"
-    old_id: "{{ _old_plugin.stdout }}"
+    old_id: "{{ _old_plugin.stdout |d('') }}"
   when:
     - reinstall or not old_id
     - not upgrade
