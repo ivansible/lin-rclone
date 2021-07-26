@@ -9,6 +9,22 @@
     daemon_reload: true
   become: true
 
+- name: stop rclone mounts before starting their automounts
+  listen: restart remote systemd mounts
+  systemd:
+    name: "{{ unit }}.mount"
+    state: stopped
+  become: true
+  loop: "{{ lin_rclone_mounts |d([]) }}"
+  loop_control:
+    label: "{{ unit }}"
+  when:
+    - item.enabled |d(true) |bool
+    - item.automount |d(false) |bool
+    - unit |d('')
+  vars:
+    unit: "{{ item.path |d('') |regex_replace('^/+') |replace('/','-') }}"
+
 - name: restart rclone automounts
   listen: restart remote systemd mounts
   systemd:
