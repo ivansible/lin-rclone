@@ -6,16 +6,9 @@
 - name: create rclone fuse wrapper
   template:
     src: rclonefs.sh
-    dest: /usr/sbin/rclonefs
+    dest: /sbin/mount.rclone
     mode: 0755
   notify: restart remote systemd mounts
-  tags: lin_rclone_wrapper
-
-- name: create symbolic link for mount
-  file:
-    state: link
-    src: /usr/sbin/rclonefs
-    dest: /sbin/mount.rclone
   tags: lin_rclone_wrapper
 
 - name: create group for access to rclone config and mounts

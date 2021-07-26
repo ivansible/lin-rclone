@@ -5,16 +5,16 @@ remote="$1"
 mountpoint="${2%%/}"
 shift 2
 
-wait=yes
-bglog=no
-foreground=no
-mount_verb=mount
 rclone="{{ lin_rclone_binary }}"
 args=""
+method=mount
+bglog=no
 
 export PATH=/bin:/usr/bin
 export RCLONE_CONFIG="{{ lin_rclone_config }}"
 export RCLONE_VERBOSE=0
+export RCLONE_DAEMON=true
+export RCLONE_DAEMON_TIMEOUT=30s
 
 export RCLONE_CACHE_DIR="{{ lin_rclone_cache_dir }}"
 unset RCLONE_VFS_CACHE_MODE
@@ -33,6 +33,7 @@ while getopts :o: opts; do
 
   params=${OPTARG//,/ }
   for param in $params; do
+    p=${param#*=}
     case "$param" in
       # generic mount options
       rw|ro|dev|nodev|suid|nosuid|exec|noexec|auto|noauto|user)
@@ -42,35 +43,33 @@ while getopts :o: opts; do
         continue ;;
       # wrapper options
       proxy=*)
-        export http_proxy=${param#*=}
-        export https_proxy=${param#*=} ;;
+        export http_proxy=$p
+        export https_proxy=$p ;;
       config=*)
-        export RCLONE_CONFIG=${param#*=} ;;
+        export RCLONE_CONFIG=$p ;;
       verbose=*)
-        export RCLONE_VERBOSE=${param#*=} ;;
-      mount-verb=*)
-        mount_verb=${param#*=} ;;
-      nowait)
-        wait=no ;;
-      foreground)
-        foreground=yes ;;
-      bglog)
+        export RCLONE_VERBOSE=$p ;;
+      method=*)
+        method=$p ;;
+      bglog|bglog=*)
         bglog=yes ;;
       # vfs options
       cache-dir=*)
-        export RCLONE_CACHE_DIR=${param#*=} ;;
+        export RCLONE_CACHE_DIR=$p ;;
       vfs-cache-mode=*)
-        export RCLONE_VFS_CACHE_MODE=${param#*=} ;;
+        export RCLONE_VFS_CACHE_MODE=$p ;;
       dir-cache-time=*)
-        export RCLONE_DIR_CACHE_TIME=${param#*=} ;;
+        export RCLONE_DIR_CACHE_TIME=$p ;;
+      daemon-timeout=*)
+        export RCLONE_DAEMON_TIMEOUT=$p ;;
       # fuse options
       uid=*)
-        export RCLONE_UID=${param#*=} ;;
+        export RCLONE_UID=$p ;;
       gid=*)
-        export RCLONE_GID=${param#*=} ;;
-      allow_root)
+        export RCLONE_GID=$p ;;
+      allow_root|allow-root)
         export RCLONE_ALLOW_ROOT=true ;;
-      allow_other)
+      allow_other|allow-other)
         export RCLONE_ALLOW_OTHER=true ;;
       # other rclone options
       *) args="$args --$param" ;;
@@ -78,30 +77,20 @@ while getopts :o: opts; do
   done
 done
 
-if [ $bglog = yes ]; then
-  stamp=$(date '+%y%m%d-%H%M%S')
-  pid=$$
-  where=$(basename "$mountpoint")
-  logfile=/tmp/rclone-${stamp}-${pid}-${where}.log
-  touch "$logfile"
-  chmod 666 "$logfile"
-  # activate verbose background logging
-  export RCLONE_VERBOSE=3
-  export RCLONE_LOG_FORMAT=date,time,microseconds
-  export RCLONE_LOG_FILE=$logfile
-  # deactivate systemd log flavor in rclone
-  unset INVOCATION_ID
+if [[ $bglog = yes ]]; then
+    stamp=$(date "+%y%m%d-%H%M%S")
+    where=$(basename "$mountpoint" | sed -e 's/ /_/g')
+    log=/tmp/rclone-${stamp}-$$-${where}.log
+    touch "$log"
+    # activate verbose background logging
+    if [[ $RCLONE_VERBOSE = 0 ]]; then
+        export RCLONE_VERBOSE=1
+    fi
+    export RCLONE_LOG_FORMAT=date,time,microseconds
+    export RCLONE_LOG_FILE="$log"
+    # deactivate systemd logging in rclone
+    unset INVOCATION_ID
 fi
 
-# exec rclone (shellcheck note: args must stay unquoted)
-if [ $foreground = yes ]; then
-  # shellcheck disable=SC2086
-  exec "$rclone" mount $args "$remote" "$mountpoint"
-else
-  # NOTE: --daemon hangs under systemd automount, using `&`
-  # shellcheck disable=SC2086
-  "$rclone" "$mount_verb" $args "$remote" "$mountpoint" </dev/null >&/dev/null &
-  while [ $wait = yes ] && [ "$(grep -c " ${mountpoint} fuse.rclone " /proc/mounts)" = 0 ]; do
-    sleep 0.5
-  done
-fi
+# shellcheck disable=SC2086
+exec "$rclone" "$method" "$remote" "$mountpoint" ${args} </dev/null
