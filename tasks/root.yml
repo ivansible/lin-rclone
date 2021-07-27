@@ -83,4 +83,15 @@
     reinstall: "{{ lin_rclone_docker_plugin_reinstall |bool }}"
   when: lin_rclone_docker_plugin_enable |bool
   tags: lin_rclone_docker_plugin
+
+- name: open rclone api port in ferm
+  ferm_port:
+    port: "{{ lin_rclone_api_port }}"
+    comment: rclone
+    zone: internal
+  when:
+    - lin_firewall == 'ferm'
+    - lin_rclone_api_port |d(0) |int
+  ignore_errors: "{{ ansible_check_mode }}"
+  tags: [skip_ansible_lint, lin_rclone_firewall]
 ...

@@ -40,6 +40,8 @@
       docker plugin install {{ image }} --grant-all-permissions {{ options_str }}
   vars:
     image: "{{ lin_rclone_docker_plugin_image }}"
+    old_id: "{{ _old_plugin.stdout |d('') }}"
+
     options_str: "{{ options_list |select |join(' ') }}"
     options_list:
       - "--alias {{ alias }}"
@@ -47,15 +49,34 @@
       - "{{ opt_config if val_config else '' }}"
       - "{{ opt_cache if val_cache else '' }}"
       - "{{ opt_verbose if val_verbose != '' else '' }}"
-    opt_args: 'args="{{ val_args }}"'
+
+    opt_args: 'args="{{ [val_args, api_args, spread_args.strip()] |select |join(" ") }}"'
     opt_config: 'config="{{ val_config }}"'
     opt_cache: 'cache="{{ val_cache }}"'
     opt_verbose: 'RCLONE_VERBOSE={{ val_verbose }}'
+
     val_args: "{{ lin_rclone_docker_plugin_args |d('',true) }}"
     val_config: "{{ lin_rclone_docker_plugin_config |d('',true) }}"
     val_cache: "{{ lin_rclone_docker_plugin_cache |d('',true) }}"
     val_verbose: "{{ lin_rclone_docker_plugin_verbose |d('',true) |string }}"
-    old_id: "{{ _old_plugin.stdout |d('') }}"
+
+    api_args: "{{ api_str if api_enabled else '' }}"
+    api_str: "--rc --rc-addr 0.0.0.0:{{ api_port }} --rc-user {{ api_user }} --rc-pass {{ api_pass }}"
+    api_port: "{{ lin_rclone_api_port |d(0) |int }}"
+    api_user: "{{ lin_rclone_api_user |d('') }}"
+    api_pass: "{{ lin_rclone_api_pass |d('') }}"
+    api_enabled: "{{ api_port and api_user and api_pass and true }}"
+
+    spread_args: >
+      {% set ns = namespace(arg = '', args = []) %}
+      {% for host, addr in spread_tuples %}
+        {% if host != inventory_hostname and addr %}
+          {% set ns.arg = '--config-to %s:%s' |format(addr, api_port) %}
+          {% set ns.args = ns.args + [ns.arg] -%}
+        {% endif %}
+      {% endfor %}
+      {{ ns.args |join(' ') if api_enabled else '' }}
+    spread_tuples: "{{ lin_rclone_config_sync |d({},true) |dictsort }}"
   when:
     - reinstall or not old_id
     - not upgrade

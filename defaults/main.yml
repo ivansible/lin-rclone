@@ -31,6 +31,14 @@ lin_rclone_docker_plugin_args: ~       # command-line arguments
 lin_rclone_docker_plugin_config: ~     # directory with rclone.conf
 lin_rclone_docker_plugin_cache: ~      # directory for cache
 
+lin_rclone_api_port: 0  # 5572
+lin_rclone_api_user: ~
+lin_rclone_api_pass: ~
+
+lin_rclone_config_sync: {}
+#  host: addr
+# ...
+
 lin_rclone_mounts: []
 #  - name: remote        # required
 #    path: /mnt/remote   # required
