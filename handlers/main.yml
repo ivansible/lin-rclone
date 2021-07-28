@@ -30,6 +30,7 @@
   systemd:
     name: "{{ unit }}.automount"
     state: restarted
+    enabled: true
   become: true
   loop: "{{ lin_rclone_mounts |d([]) }}"
   loop_control:
