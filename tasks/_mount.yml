@@ -39,6 +39,8 @@
       # troubleshooting options
       - "{{ mount_verb_default |bool |ternary('', 'mount-verb=%s' % mount_verb_str) }}"
       - "{{ bglog |bool |ternary('bglog', '') }}"
+      # spread options
+      - "{{ spread |bool |ternary(_rclone_mount_spread, '') }}"
     mount: "{{ item.mount |d(true) |bool }}"
     systemd: "{{ item.systemd |d(lin_rclone_prefer_systemd) |d(false) |bool }}"
     automount: "{{ item.path is defined and item.automount |d(false) |bool }}"
@@ -46,6 +48,7 @@
     fstab_automount: "{{ fstab |bool and automount |bool }}"
     nonroot: "{{ item.nonroot |d(false) |bool }}"
     bglog: "{{ item.bglog |d(false) |bool }}"
+    spread: "{{ item.spread |d(lin_rclone_mount_spread) |bool }}"
     proxy: "{{ item.proxy |d('') }}"
     token: "{{ item.token |d('') |string }}"
     reuse_str: "{{ item.reuse_token |d('') |string }}"

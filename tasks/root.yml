@@ -57,6 +57,30 @@
     - lin_rclone_config
     - lin_rclone_mounts
 
+- name: prepare spread options for mounts
+  set_fact:
+    _rclone_mount_spread: "{{ spread_opts.strip() if api_enabled else '' }}"
+  vars:
+    api_port: "{{ lin_rclone_api_port |d(0) |int }}"
+    api_user: "{{ lin_rclone_api_user |d('') }}"
+    api_pass: "{{ lin_rclone_api_pass |d('') }}"
+    api_enabled: "{{ api_port and api_user and api_pass and true }}"
+    spread_hosts: "{{ lin_rclone_config_sync |d({},true) |dictsort }}"
+    spread_opts: >
+      {% set ns = namespace(arg = "", args = []) %}
+      {% for host, addr in spread_hosts %}
+        {% if host != inventory_hostname and addr %}
+          {% set ns.arg = 'config-to=%s:%s@%s:%s'
+                        | format(api_user, api_pass, addr, api_port) %}
+          {% set ns.args = ns.args + [ns.arg] %}
+        {% endif %}
+      {% endfor %}
+      {{ ns.args |join(comma) }}
+    comma: ','
+  tags:
+    - lin_rclone_config
+    - lin_rclone_mounts
+
 - name: setup rclone mounts
   include_tasks: _mount.yml
   args:
