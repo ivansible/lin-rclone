@@ -22,7 +22,8 @@
       failed_when:
         - _rclone_package.failed
         - _rclone_package.msg is not search('later version is already installed')
-      when: _rclone_release is changed
+      when:
+        - _rclone_release is changed
       notify: restart remote systemd mounts
   when: lin_rclone_from_deb |bool
 

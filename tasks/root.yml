@@ -8,6 +8,17 @@
     src: rclonefs.sh
     dest: /sbin/mount.rclone
     mode: 0755
+  when: lin_rclone_use_wrapper |bool
+  notify: restart remote systemd mounts
+  tags: lin_rclone_wrapper
+
+- name: link to rclone as mount helper
+  file:
+    state: link
+    src: "{{ lin_rclone_binary }}"
+    dest: /sbin/mount.rclone
+    force: true
+  when: not lin_rclone_use_wrapper |bool
   notify: restart remote systemd mounts
   tags: lin_rclone_wrapper
 

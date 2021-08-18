@@ -28,17 +28,23 @@
       - "{{ nonroot |bool |ternary('gid=%s' % group_gid, '') }}"
       - "{{ nonroot |bool |ternary('allow_other', '') }}"
       # vfs options
-      - "{{ cache_dir |ternary('cache_dir=%s' % cache_dir, '') }}"
       - "{{ cache_mode |ternary('vfs-cache-mode=%s' % cache_mode, '') }}"
       - "{{ cache_time |ternary('dir-cache-time=%s' % cache_time, '') }}"
-      # rclonefs options
-      - "{{ proxy |ternary('proxy=%s' % proxy, '') }}"
+      # proxy options
+      - "{{ (proxy and wrapper) |ternary('proxy=%s' % proxy, '') }}"
+      - "{{ (proxy and not wrapper) |ternary('http_proxy=%s' % proxy, '') }}"
+      - "{{ (proxy and not wrapper) |ternary('https_proxy=%s' % proxy, '') }}"
+      # rclone options
+      - "{{ '' if wrapper else ('config=%s' % lin_rclone_config) }}"
+      - "{{ (cache_dir or not wrapper) |ternary('cache_dir=%s' % final_cache_dir, '') }}"
       # systemd / automount options
       - "{{ fstab_automount |bool |ternary('x-systemd.automount', '') }}"
       - "{{ fstab_automount |bool |ternary('x-systemd.idle-timeout=%d' % lin_rclone_idle_timeout, '') }}"
       # troubleshooting options
-      - "{{ mount_verb_default |bool |ternary('', 'mount-verb=%s' % mount_verb_str) }}"
-      - "{{ bglog |bool |ternary('bglog', '') }}"
+      - "{{ (lin_rclone_hide_args |bool and not wrapper) |ternary('args2env', '') }}"
+      - "{{ (mount_verb_custom and wrapper) |ternary('mount-verb=%s' % mount_verb_str, '') }}"
+      - "{{ (mount_verb_custom and not wrapper) |ternary('command=%s' % mount_verb_str, '') }}"
+      - "{{ (bglog and wrapper) |ternary('bglog', '') }}"
       # spread options
       - "{{ spread |bool |ternary(_rclone_mount_spread, '') }}"
     mount: "{{ item.mount |d(true) |bool }}"
@@ -55,11 +61,13 @@
     reuse_lower: "{{ reuse_str |lower }}"
     reuse_bool: "{{ reuse_lower in ['true','yes','1',''] }}"
     cache_dir: "{{ item.cache_dir |d('',true) }}"
+    final_cache_dir: "{{ cache_dir |d(lin_rclone_cache_dir, true) }}"
     group_gid: "{{ lin_rclone_group_gid |d(1000) }}"
     cache_mode: "{{ lin_rclone_vfs_cache_mode |d('',true) }}"
     cache_time: "{{ lin_rclone_dir_cache_time |d('',true) }}"
+    wrapper: "{{ lin_rclone_use_wrapper |bool }}"
     mount_verb_str: "{{ lin_rclone_mount_verb |d('',true) |string }}"
-    mount_verb_default: "{{ mount_verb_str in ['mount', 'default', ''] }}"
+    mount_verb_custom: "{{ mount_verb_str not in ['mount', 'default', ''] }}"
   no_log: "{{ hide_secrets |bool }}"
 
 - name: validate name and path of {{ _name }}
