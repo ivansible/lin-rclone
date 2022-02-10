@@ -1,4 +1,24 @@
 ---
+provisioner:
+  name: ansible
+  inventory:
+    group_vars:
+      molecule:
+  playbooks:
+    prepare: ../default/prepare.yml
+    converge: ../default/converge.yml
+    verify: ../default/verify.yml
+  config_options:
+    defaults:
+      strategy: linear
+      verbosity: 1
+  lint:
+    name: ansible-lint
+verifier:
+  name: ansible
+  lint:
+    name: ansible-lint
+    enabled: false
 dependency:
   name: galaxy
   options:
@@ -13,22 +33,6 @@ platforms:
   - name: localhost
     groups:
       - molecule
-provisioner:
-  name: ansible
-  inventory:
-    group_vars:
-      molecule:
-  playbooks:
-    prepare: ../default/prepare.yml
-    converge: ../default/converge.yml
-    verify: ../default/verify.yml
-  lint:
-    name: ansible-lint
-verifier:
-  name: ansible
-  lint:
-    name: ansible-lint
-    enabled: false
 scenario:
   name: localhost
   test_sequence:

@@ -1,0 +1,19 @@
+ansible==2.10.7
+docker
+mitogen==0.3.2
+# avoid latest cryptography, it requires rust
+cryptography<3.4
+# dependencies for test
+molecule==3.1.5
+molecule-docker==0.2.4
+ansible-lint
+yamllint
+pytest
+pytest-testinfra
+flake8
+# jmespath is required by json_query filter
+jmespath
+# netaddr is required by ipaddr filter
+netaddr
+# boto3 is required by cloudfront_distribution
+boto3
