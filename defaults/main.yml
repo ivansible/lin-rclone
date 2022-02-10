@@ -15,6 +15,7 @@ lin_rclone_bash_alias: true
 
 lin_rclone_use_wrapper: false
 lin_rclone_hide_args: false
+lin_rclone_disable_netdev: false
 lin_rclone_prefer_systemd: false
 lin_rclone_idle_timeout: 900
 lin_rclone_mount_timeout: 10

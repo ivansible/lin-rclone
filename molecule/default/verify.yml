@@ -7,10 +7,10 @@
       include_vars: vars.yml
       tags: always
 
-    - name: unmount old mounts
+    - name: unmount old mounts (failures ignored)
       command: umount "{{ item.path }}"  # noqa 301 303
       args: {warn: false}
-      ignore_errors: true
+      failed_when: false
       loop: "{{ lin_rclone_mounts }}"
       loop_control: {label: "{{ item.name }}"}
 

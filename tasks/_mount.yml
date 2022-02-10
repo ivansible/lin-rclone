@@ -23,7 +23,7 @@
       - rw
       - "{{ fstab |bool |ternary('noauto','') }}"
       - "{{ fstab |bool |ternary('nofail','') }}"
-      - "{{ fstab |bool |ternary('_netdev','') }}"
+      - "{{ netdev |bool |ternary('_netdev','') }}"
       # fuse options
       - "{{ nonroot |bool |ternary('gid=%s' % group_gid, '') }}"
       - "{{ nonroot |bool |ternary('allow_other', '') }}"
@@ -52,6 +52,7 @@
     automount: "{{ item.path is defined and item.automount |d(false) |bool }}"
     fstab: "{{ mount |bool and not systemd |bool }}"
     fstab_automount: "{{ fstab |bool and automount |bool }}"
+    netdev: "{{ fstab |bool and not lin_rclone_disable_netdev |bool }}"
     nonroot: "{{ item.nonroot |d(false) |bool }}"
     bglog: "{{ item.bglog |d(false) |bool }}"
     spread: "{{ item.spread |d(lin_rclone_mount_spread) |bool }}"

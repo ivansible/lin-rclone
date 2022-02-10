@@ -7,6 +7,7 @@ lin_core_time_sync: false
 lin_core_system_locale: en_US.UTF-8
 
 lin_rclone_allow_nonroot: false
+lin_rclone_disable_netdev: true
 lin_rclone_mounts:
   - name: test1
     path: /mnt/test1
