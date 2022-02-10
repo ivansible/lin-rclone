@@ -1,4 +1,4 @@
-ansible==2.10.7
+ansible==4.2.0
 docker
 mitogen==0.3.2
 # avoid latest cryptography, it requires rust
